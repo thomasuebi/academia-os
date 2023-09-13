@@ -1,5 +1,6 @@
 import React from "react"
 import { Form, Input, Typography, FormInstance, Button } from "antd"
+import axios from "axios"
 
 const { Paragraph, Text } = Typography
 
@@ -14,12 +15,53 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
     try {
       const values = (await form.validateFields()) as any
       console.log("Form values:", values)
-      localStorage.setItem("email", values.email)
-      localStorage.setItem("openAIKey", values.openAIKey)
+
+      // Assuming 'values.email' contains the user's email
+      const email = values.email
+      const openAIKey = values.openAIKey
+
+      localStorage.setItem("email", email)
+      localStorage.setItem("openAIKey", openAIKey)
+
+      // Hubspot API configurations
+      const portalId = "26150643"
+      const formId = "77f39c46-20a4-43f7-807a-c44a17caac8a"
+      const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`
+
+      // Create payload
+      const data = {
+        submittedAt: new Date().getTime().toString(),
+        fields: [
+          {
+            name: "email",
+            value: email,
+          },
+        ],
+        // Include any other context data or legal consent options you need
+      }
+
+      // Make API request
+      const response = await axios.post(url, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.status === 200) {
+        console.log("Submission successful:", response.data)
+      }
+
+      // Trigger any other submit actions
       onSubmit && onSubmit()
+
+      // Reset the form
       form.resetFields()
     } catch (error) {
-      console.log("Validation failed:", error)
+      if (axios.isAxiosError(error)) {
+        console.log("Axios error:", error.response?.data)
+      } else {
+        console.log("Validation or other error:", error)
+      }
     }
   }
 

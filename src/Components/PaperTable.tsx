@@ -32,9 +32,19 @@ export const PaperTable = (props: { papers: Paper[] }) => {
     <Space direction='vertical' style={{ width: "100%" }}>
       <Space direction='horizontal'>
         <AutoComplete
+          dropdownStyle={{ width: 300 }}
           options={[
             ...(columnAddSearchQuery
-              ? [{ value: columnAddSearchQuery, label: columnAddSearchQuery }]
+              ? [
+                  {
+                    value: columnAddSearchQuery,
+                    label: (
+                      <span>
+                        What is the <b>{columnAddSearchQuery}</b> of the paper?
+                      </span>
+                    ),
+                  },
+                ]
               : []),
             { value: "Key Findings", label: "Key Findings" },
             { value: "Limitations", label: "Limitations" },
@@ -70,13 +80,13 @@ export const PaperTable = (props: { papers: Paper[] }) => {
           }}
           onSearch={(text) => setColumnAddSearchQuery(text)}
           suffixIcon={<PlusOutlined />}
-          placeholder='Add column'
+          placeholder='Add a Custom Column'
         />
-        <Button icon={<DownloadOutlined />}>Download CSV</Button>
-        <Button icon={<DownloadOutlined />}>Download BIB</Button>
+        {/* <Button icon={<DownloadOutlined />}>Download CSV</Button>
+        <Button icon={<DownloadOutlined />}>Download BIB</Button> */}
       </Space>
       <Table
-        rowSelection={{ type: "checkbox" }}
+        // rowSelection={{ type: "checkbox" }}
         style={{ maxHeight: "calc(100vh - 270px)", overflowY: "auto" }}
         size='small'
         pagination={false}

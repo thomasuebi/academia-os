@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react"
-import { Button, Space, Tabs, Typography } from "antd"
+import { Button, Space, Tabs, Typography, message } from "antd"
 import Workflow from "./Workflow"
 import {
   BookOutlined,
@@ -78,13 +78,24 @@ const RootTabs: React.FC = () => {
       <Tabs
         tabBarExtraContent={
           <Space direction='horizontal'>
-            <Button type='text' icon={<SlackOutlined />}>
+            <Button
+              className='hide-on-small-screen'
+              target='_blank'
+              href='https://join.slack.com/t/academiaos/shared_invite/zt-23730lsp0-Qlkv_0Bs3hgMY2FGTC~HnQ'
+              type='text'
+              icon={<SlackOutlined />}>
               Slack Community
             </Button>
-            <Button type='text' icon={<GithubOutlined />}>
+            <Button
+              type='text'
+              className='hide-on-small-screen'
+              icon={<GithubOutlined />}
+              onClick={() =>
+                message.info("We are open-sourcing soon. Stay tuned!")
+              }>
               GitHub
             </Button>
-            <Button type='text' icon={<BookOutlined />}></Button>
+            {/* <Button type='text' icon={<BookOutlined />}></Button> */}
             <Button
               type='text'
               onClick={() => setIsConfigurationVisible(true)}

@@ -64,10 +64,15 @@ const Workflow = (props: { tabKey?: string }) => {
     handleRenameTab(props?.tabKey || "", query)
     setSearchQuery(query)
     setSearchLoading(true)
-    const searchResults = await (
-      await SearchRepository.searchPapers(query)
-    )?.nextPage()
-    setResults(searchResults || [])
+    let searchResults = [] as Paper[]
+    try {
+      searchResults =
+        (await (await SearchRepository.searchPapers(query))?.nextPage()) || []
+    } catch (error) {}
+    if (!searchResults?.length) {
+      // TODO: Use GPT to create a better search query instead
+    }
+    setResults(searchResults)
     setSearchLoading(false)
     setCurrent(1)
     setRelevancyLoading(true)
@@ -121,12 +126,12 @@ const Workflow = (props: { tabKey?: string }) => {
                     </Form.Item>
                   </Form>
                   <Space>
-                    <Button type='link' icon={<CloudUploadOutlined />}>
+                    {/* <Button type='link' icon={<CloudUploadOutlined />}>
                       Upload PDFs
                     </Button>
                     <Button type='link' icon={<BookOutlined />}>
                       From Library
-                    </Button>
+                    </Button> */}
                   </Space>
                 </div>
               </div>
@@ -241,13 +246,24 @@ const Workflow = (props: { tabKey?: string }) => {
     <>
       <Row>
         <Col xs={0} sm={0} md={6} lg={4} xl={3}>
-          <Steps
-            current={current}
-            onChange={onChange}
-            direction='vertical'
-            size='small'
-            items={items}
-          />
+          <Space direction='vertical'>
+            <Steps
+              current={current}
+              onChange={onChange}
+              direction='vertical'
+              size='small'
+              items={items}
+            />
+            <div>
+              <a
+                type='link'
+                href='https://academia-os.canny.io/'
+                target='_blank'
+                rel='noreferrer'>
+                Give Feedback or Request Feature
+              </a>
+            </div>
+          </Space>
         </Col>
         <Col xs={24} sm={24} md={18} lg={20} xl={21}>
           <Card
