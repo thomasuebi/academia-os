@@ -34,6 +34,7 @@ import { PaperTable } from "./PaperTable"
 import { OpenAIService } from "../Services/OpenAIService"
 import ConfigurationForm from "./ConfigurationForm"
 import StreamingComponent from "./StreamingComponent"
+import logo from "../favicon.png"
 const { useToken } = theme
 
 const Workflow = (props: { tabKey?: string }) => {
@@ -71,7 +72,7 @@ const Workflow = (props: { tabKey?: string }) => {
     setCurrent(1)
     setRelevancyLoading(true)
     const relevantResults = await RankingService.rankPapers(
-      searchQuery,
+      query,
       searchResults?.filter((paper) => paper?.abstract) || []
     )
     setRelevantResults(relevantResults)
@@ -85,6 +86,11 @@ const Workflow = (props: { tabKey?: string }) => {
       content: (
         <>
           <div style={{ width: "100%", textAlign: "center", padding: "20px" }}>
+            <img
+              alt='AcademiaOS'
+              src={logo}
+              style={{ width: "50px", height: "50px", marginBottom: "-20px" }}
+            />
             <Typography.Title>AcademiaOS</Typography.Title>
             <p style={{ marginTop: "-10px" }}>
               <Tag>Open Source</Tag> <Tag>OpenAI-Powered</Tag>

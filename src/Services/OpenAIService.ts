@@ -8,7 +8,8 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { uniqBy } from "../Helpers/uniqBy"
 import { ChatOpenAI } from "langchain/chat_models/openai"
-import { HumanMessage } from "langchain/schema"
+import { HumanMessage, SystemMessage } from "langchain/schema"
+import { OpenAI } from "langchain/llms/openai"
 
 export class OpenAIService {
   public static getOpenAIKey = () => {
@@ -30,5 +31,25 @@ export class OpenAIService {
         },
       ],
     })
+  }
+
+  static async getDetailAboutPaper(paper: Paper, detail: string) {
+    const model = new ChatOpenAI({
+      maxTokens: 20,
+      openAIApiKey: OpenAIService.getOpenAIKey(),
+    })
+
+    // TODO: Split long texts and search for the most relevant one first
+
+    const result = await model.predictMessages([
+      new SystemMessage(
+        "You extract information from a paper. Answer the question shortly and concisely in only one or few words about the given abstract, no need for full sentences. Only reply with the answer. Does not have to be perfect, but if you don't have a somewhat acceptable answer, reply 'n/a'."
+      ),
+      new HumanMessage(
+        `${paper?.title}\n${paper?.abstract}\n\nDescribe the '${detail}' of the given paper.`
+      ),
+    ])
+
+    return result?.content === detail ? "n/a" : result?.content
   }
 }

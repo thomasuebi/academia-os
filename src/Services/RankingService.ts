@@ -44,8 +44,9 @@ export class RankingService {
       // Perform a similarity search.
       const resultsWithScore = await store.similaritySearchVectorWithScore(
         query,
-        15
+        30
       )
+      console.log("query string", queryString)
       // Print the results.
       console.log(JSON.stringify(resultsWithScore, null, 2))
 
