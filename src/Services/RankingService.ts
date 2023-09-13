@@ -1,6 +1,5 @@
 // Import the SemanticScholar library
 import { message } from "antd"
-import type { Paper } from "semanticscholarjs"
 import { Document } from "langchain/document"
 import { CharacterTextSplitter } from "langchain/text_splitter"
 import { asyncForEach } from "../Helpers/asyncForEach"
@@ -8,12 +7,13 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { uniqBy } from "../Helpers/uniqBy"
 import { OpenAIService } from "./OpenAIService"
+import { AcademicPaper } from "../Types/AcademicPaper"
 
 export class RankingService {
   public static rankPapers = async (
     queryString?: string,
-    papers?: Paper[]
-  ): Promise<Paper[]> => {
+    papers?: AcademicPaper[]
+  ): Promise<AcademicPaper[]> => {
     try {
       const documents = [] as Document[]
       await asyncForEach(papers || [], async (paper) => {
@@ -23,7 +23,7 @@ export class RankingService {
           chunkOverlap: 50,
         })
         const output = await splitter.createDocuments(
-          [`${paper?.title || ""} ${paper?.abstract || ""}`],
+          [`${paper?.title || ""} ${paper?.fullText || ""}`],
           [{ id: paper?.corpusId }]
         )
         documents.push(...(output || []))
@@ -58,7 +58,7 @@ export class RankingService {
             )
           }),
           (paper) => paper?.corpusId || ""
-        )?.filter((paper) => paper) as Paper[]) || []
+        )?.filter((paper) => paper) as AcademicPaper[]) || []
       )
     } catch (error) {
       console.log(error)

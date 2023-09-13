@@ -24,7 +24,6 @@ import {
   PlusOutlined,
   UploadOutlined,
 } from "@ant-design/icons"
-import { Paper } from "semanticscholarjs"
 import { SearchRepository } from "../Services/SearchService"
 import { useDispatch } from "react-redux"
 import { renameTab, addTab } from "../Redux/actionCreators"
@@ -35,13 +34,17 @@ import { OpenAIService } from "../Services/OpenAIService"
 import ConfigurationForm from "./ConfigurationForm"
 import StreamingComponent from "./StreamingComponent"
 import logo from "../favicon.png"
+import { PDFUpload } from "./PDFUpload"
+import { AcademicPaper } from "../Types/AcademicPaper"
 const { useToken } = theme
 
 const Workflow = (props: { tabKey?: string }) => {
   const [current, setCurrent] = useState(0)
   const [searchLoading, setSearchLoading] = useState(false)
-  const [results, setResults] = useState<Paper[] | null>(null)
-  const [relevantResults, setRelevantResults] = useState<Paper[] | null>(null)
+  const [results, setResults] = useState<AcademicPaper[] | null>(null)
+  const [relevantResults, setRelevantResults] = useState<
+    AcademicPaper[] | null
+  >(null)
   const [searchQuery, setSearchQuery] = useState("")
   const { token } = useToken()
   const [relevancyLoading, setRelevancyLoading] = useState(false)
@@ -64,7 +67,7 @@ const Workflow = (props: { tabKey?: string }) => {
     handleRenameTab(props?.tabKey || "", query)
     setSearchQuery(query)
     setSearchLoading(true)
-    let searchResults = [] as Paper[]
+    let searchResults = [] as AcademicPaper[]
     try {
       searchResults =
         (await (await SearchRepository.searchPapers(query))?.nextPage()) || []
@@ -72,13 +75,21 @@ const Workflow = (props: { tabKey?: string }) => {
     if (!searchResults?.length) {
       // TODO: Use GPT to create a better search query instead
     }
+    searchResults = searchResults?.map((paper) => {
+      paper.fullText = paper?.fullText || paper?.abstract
+      return paper
+    })
     setResults(searchResults)
     setSearchLoading(false)
     setCurrent(1)
+    await evaluate(query, searchResults)
+  }
+
+  const evaluate = async (query: string, searchResults: AcademicPaper[]) => {
     setRelevancyLoading(true)
     const relevantResults = await RankingService.rankPapers(
       query,
-      searchResults?.filter((paper) => paper?.abstract) || []
+      searchResults?.filter((paper) => paper?.fullText) || []
     )
     setRelevantResults(relevantResults)
     setRelevancyLoading(false)
@@ -126,6 +137,21 @@ const Workflow = (props: { tabKey?: string }) => {
                     </Form.Item>
                   </Form>
                   <Space>
+                    <PDFUpload
+                      onAllUploadsFinished={(completedUploads) => {
+                        setSearchLoading(true)
+                        const searchResults = completedUploads.map(
+                          (upload) =>
+                            ({
+                              title: upload?.title,
+                              fullText: upload?.text,
+                            } as AcademicPaper)
+                        )
+                        setResults(searchResults)
+                        setSearchLoading(false)
+                        evaluate(searchQuery, searchResults)
+                      }}
+                    />
                     {/* <Button type='link' icon={<CloudUploadOutlined />}>
                       Upload PDFs
                     </Button>
@@ -202,7 +228,7 @@ const Workflow = (props: { tabKey?: string }) => {
                           ?.map((author) => author?.name)
                           ?.join(", ")}, ${paper?.year}, ${
                           paper?.title
-                        } write: ${paper?.abstract}`
+                        } write: ${paper?.fullText}`
                     )
                     ?.join("\n\n")
                     ?.substring(0, 6000) || ""

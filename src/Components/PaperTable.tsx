@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { AutoComplete, Button, Space, Table, Typography, theme } from "antd"
-import { Paper } from "semanticscholarjs"
 import { useDispatch } from "react-redux"
 import { renameTab, addTab } from "../Redux/actionCreators"
 import { PaperComponent } from "./Paper"
@@ -12,9 +11,10 @@ import {
 import { useEffect, useState } from "react"
 import { OpenAIService } from "../Services/OpenAIService"
 import { CustomColumn } from "./CustomColumn"
+import { AcademicPaper } from "../Types/AcademicPaper"
 const { useToken } = theme
 
-export const PaperTable = (props: { papers: Paper[] }) => {
+export const PaperTable = (props: { papers: AcademicPaper[] }) => {
   const dispatch = useDispatch()
   const { token } = useToken()
   const [columnAddSearchQuery, setColumnAddSearchQuery] = useState("")
@@ -160,7 +160,7 @@ export const PaperTable = (props: { papers: Paper[] }) => {
                 <Typography.Paragraph
                   ellipsis={{ rows: 5 }}
                   style={{ marginBottom: 0 }}>
-                  {record.abstract}
+                  {record.abstract || record?.fullText}
                 </Typography.Paragraph>
               </Space>
             ),
@@ -169,7 +169,7 @@ export const PaperTable = (props: { papers: Paper[] }) => {
             title: column,
             dataIndex: column,
             key: column,
-            render: (text: string, record: Paper, index: number) => (
+            render: (text: string, record: AcademicPaper, index: number) => (
               <CustomColumn record={record} detail={column} />
             ),
           })),

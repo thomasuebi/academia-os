@@ -1,6 +1,5 @@
 // Import the SemanticScholar library
 import { message } from "antd"
-import type { Paper } from "semanticscholarjs"
 import { Document } from "langchain/document"
 import { CharacterTextSplitter } from "langchain/text_splitter"
 import { asyncForEach } from "../Helpers/asyncForEach"
@@ -10,6 +9,7 @@ import { uniqBy } from "../Helpers/uniqBy"
 import { ChatOpenAI } from "langchain/chat_models/openai"
 import { HumanMessage, SystemMessage } from "langchain/schema"
 import { OpenAI } from "langchain/llms/openai"
+import { AcademicPaper } from "../Types/AcademicPaper"
 
 export class OpenAIService {
   public static getOpenAIKey = () => {
@@ -33,7 +33,7 @@ export class OpenAIService {
     })
   }
 
-  static async getDetailAboutPaper(paper: Paper, detail: string) {
+  static async getDetailAboutPaper(paper: AcademicPaper, detail: string) {
     const model = new ChatOpenAI({
       maxTokens: 20,
       openAIApiKey: OpenAIService.getOpenAIKey(),
@@ -46,7 +46,7 @@ export class OpenAIService {
         "You extract information from a paper. Answer the question shortly and concisely in only one or few words about the given abstract, no need for full sentences. Only reply with the answer. Does not have to be perfect, but if you don't have a somewhat acceptable answer, reply 'n/a'."
       ),
       new HumanMessage(
-        `${paper?.title}\n${paper?.abstract}\n\nDescribe the '${detail}' of the given paper.`
+        `${paper?.title}\n${paper?.fullText}\n\nDescribe the '${detail}' of the given paper.`
       ),
     ])
 

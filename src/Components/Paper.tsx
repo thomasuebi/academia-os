@@ -1,8 +1,11 @@
 import { FilePdfOutlined } from "@ant-design/icons"
-import { Paper } from "semanticscholarjs"
 import { Card, Col, Row, Space, Typography } from "antd"
+import { AcademicPaper } from "../Types/AcademicPaper"
 
-export const PaperComponent = (props: { tabKey?: string; paper?: Paper }) => {
+export const PaperComponent = (props: {
+  tabKey?: string
+  paper?: AcademicPaper
+}) => {
   return (
     <Row>
       <Col
@@ -58,7 +61,7 @@ export const PaperComponent = (props: { tabKey?: string; paper?: Paper }) => {
             fontSize: "14pt",
             fontFamily: "Times New Roman",
           }}>
-          {props?.paper?.abstract}
+          {props?.paper?.fullText}
         </Typography.Paragraph>
         {/* </Card> */}
       </Col>

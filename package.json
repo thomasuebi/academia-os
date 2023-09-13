@@ -14,6 +14,8 @@
     "antd": "^5.9.0",
     "axios": "^1.5.0",
     "langchain": "^0.0.147",
+    "pdfjs-dist": "^3.10.111",
+    "querystring": "^0.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.1.2",
@@ -49,6 +51,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/pdfjs-dist": "^2.10.378"
   }
 }
