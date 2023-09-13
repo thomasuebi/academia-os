@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FC } from "react"
-import { Upload, Button, Spin, Typography } from "antd"
+import { Upload, Button, Spin, Typography, Badge } from "antd"
 import { UploadOutlined } from "@ant-design/icons"
 import { RcFile, UploadProps } from "antd/lib/upload"
 import { PDFService } from "../Services/PDFService" // Path might differ based on your setup
@@ -54,18 +54,17 @@ export const PDFUpload: FC<UploadTestProps> = ({ onAllUploadsFinished }) => {
 
   return (
     <div>
-      <Upload
-        customRequest={customRequest}
-        showUploadList={false}
-        multiple={true}
-        beforeUpload={beforeUpload}>
-        <Button icon={<UploadOutlined />}>Upload PDF</Button>
-      </Upload>
-      {loading ? (
-        <Spin />
-      ) : (
-        <Typography.Text>{texts.join(", ")}</Typography.Text>
-      )}
+      <Badge count={uploadCount}>
+        <Upload
+          customRequest={customRequest}
+          showUploadList={false}
+          multiple={true}
+          beforeUpload={beforeUpload}>
+          <Button loading={loading} icon={<UploadOutlined />}>
+            Upload PDFs
+          </Button>
+        </Upload>
+      </Badge>
     </div>
   )
 }
