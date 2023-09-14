@@ -8,7 +8,7 @@ Welcome to **AcademiaOS**, your one-stop solution for academic information retri
 <p align="center">
     <img src="public\overview.gif"  alt="Demo" width="400"/>
 </p>
-Live-Demo: [https://academia-os.org/](https://academia-os.org/)
+Live-Demo: https://academia-os.org/
 
 Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-23730lsp0-Qlkv_0Bs3hgMY2FGTC~HnQ)!
 ## 🌟 Features 
