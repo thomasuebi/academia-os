@@ -1,46 +1,56 @@
-# Getting Started with Create React App
+# 🎓 AcademiaOS 🎓
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Welcome to **AcademiaOS**, your one-stop solution for academic information retrieval and reasoning! We've built this on a robust large language model platform equipped with a bouquet of features dedicated to providing the best assistance for researchers possible.
 
-## Available Scripts
+## 🌟 Features 
 
-In the project directory, you can run:
+* **Find Academic Papers**: Building on the SemanticScholar corpus and OpenAI embeddings, AcademiaOS finds and ranks relevant papers to your search queries. 
+* **Upload PDFs**: If you have curated papers or other qualitative documents (such as interview transcripts) as PDFs, you can upload them for downstream tasks. Text-PDFs are handled in-browser while scanned PDFs are OCRd using Adobe PDF Extract API.
+* **Mass Information Extraction**: Structurally extract information (such as a paper's sentiment towards your thesis or information such as the count of study participants) from papers at scale.
+* **Automated Literature Review**: Navigate with a clean and intuitive interface.
+
+## 🔧 Getting Started 
+
+To get started with AcademiaOS, you require [Node.js](https://nodejs.org/en/download) installed in your machine.
+
+1. Use `git clone` to clone this repository. 
+2. Run `npm install`.
+
+## 👨‍💻 Development Mode  
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Initiates the application in the development mode.\
+Use [http://localhost:3000](http://localhost:3000) to view the application on your browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The application reloads automatically if any edits are made.\
+Any lint errors are visible in the console.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Initiates the test runner in the interactive watch mode.\
+Visit the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for further information.
+
+## 🏭 Production Build 
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Compiles the application for production into the `build` folder.\
+Efficiently bundles React in the production mode and optimizes the build to deliver optimum performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The build is minified, and the filenames include the hashes.\
+Your application is now ready for deployment!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Visit the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for an in-depth understanding.
 
-### `npm run eject`
+## 💡 Contributing 
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+We eagerly look forward to your valuable contributions to the AcademiaOS project! Feel free to brainstorm ideas, recommend suggestions, or report bugs. You're always invited to open an issue or submit a pull request.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## ⚖️ License 
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+This endeavor is under the aegis of an open-source License. Refer to the [LICENSE](./LICENSE) file for detailed information.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+----------
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Crafted with passion and commitment by Thomas Übellacker❣️ Happy coding! ⌨️💡
