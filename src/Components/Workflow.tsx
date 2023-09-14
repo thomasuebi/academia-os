@@ -126,9 +126,12 @@ const Workflow = (props: { tabKey?: string }) => {
                     maxWidth: "400px",
                     textAlign: "center",
                   }}>
-                  <Form onFinish={(values) => search(values?.query)}>
+                  <Form
+                    autoComplete='off'
+                    onFinish={(values) => search(values?.query)}>
                     <Form.Item name='query'>
                       <Input
+                        autoComplete='off'
                         autoFocus
                         disabled={searchLoading}
                         size='large'
