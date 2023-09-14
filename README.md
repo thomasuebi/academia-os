@@ -1,4 +1,7 @@
-# 🎓 AcademiaOS 🎓
+<p align="center">
+  <img src="./src/favicon.png" alt="AcademiaOS logo" width="50">
+</p>
+<h1 align="center">AcademiaOS</h1>
 
 Welcome to **AcademiaOS**, your one-stop solution for academic information retrieval and reasoning! We've built this on a robust large language model platform equipped with a bouquet of features dedicated to providing the best assistance for researchers possible.
 
