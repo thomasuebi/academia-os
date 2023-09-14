@@ -20,6 +20,12 @@ Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-
 
 ## 🔧 Getting Started 
 
+Tech Stack:
+- ReactJS
+- AntDesign (Component Library)
+- LangChainJS (Composability with Large Language Models)
+- SemanticScholarJS (Interaction with Semantic Scholar)
+
 To get started with AcademiaOS, you require [Node.js](https://nodejs.org/en/download) installed in your machine.
 
 1. Use `git clone` to clone this repository. 
