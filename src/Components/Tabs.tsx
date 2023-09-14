@@ -88,11 +88,10 @@ const RootTabs: React.FC = () => {
             </Button>
             <Button
               type='text'
+              target='_blank'
+              href='https://github.com/thomasuebi/academia-os'
               className='hide-on-small-screen'
-              icon={<GithubOutlined />}
-              onClick={() =>
-                message.info("We are open-sourcing soon. Stay tuned!")
-              }>
+              icon={<GithubOutlined />}>
               GitHub
             </Button>
             {/* <Button type='text' icon={<BookOutlined />}></Button> */}
