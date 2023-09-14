@@ -5,8 +5,9 @@
 
 Welcome to **AcademiaOS**, your one-stop solution for academic information retrieval and reasoning! We've built this on a robust large language model platform equipped with a bouquet of features dedicated to providing the best assistance for researchers possible.
 
-<img src="public\overview.gif" alt="Demo"/>
-
+<p align="center">
+    <img src="public\overview.gif"  alt="Demo" width="400"/>
+</p>
 Live-Demo: [https://academia-os.org/](https://academia-os.org/)
 
 Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-23730lsp0-Qlkv_0Bs3hgMY2FGTC~HnQ)!
