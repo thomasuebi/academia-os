@@ -35,12 +35,23 @@ export const PDFUpload: FC<UploadTestProps> = ({ onAllUploadsFinished }) => {
 
       reader.onloadend = async () => {
         const arrayBuffer = reader.result as ArrayBuffer
-        const extractedText = await PDFService.uploadAndExtractPDF(arrayBuffer)
-        setCompletedUploads((prev) => [
-          ...prev,
-          { text: extractedText, title: file.name },
-        ])
-        onSuccess()
+        if (file.name?.toLowerCase()?.endsWith(".pdf")) {
+          const extractedText = await PDFService.uploadAndExtractPDF(
+            arrayBuffer
+          )
+          setCompletedUploads((prev) => [
+            ...prev,
+            { text: extractedText, title: file.name },
+          ])
+          onSuccess()
+        } else if (file.name?.toLowerCase()?.endsWith(".json")) {
+          const json = new TextDecoder().decode(arrayBuffer)
+          setCompletedUploads((prev) => [
+            ...prev,
+            { text: json, title: file.name },
+          ])
+          onSuccess()
+        }
       }
     } catch (e) {
       onError(e as Error)

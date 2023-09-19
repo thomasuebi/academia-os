@@ -1,4 +1,6 @@
 import React, { useState } from "react"
+import { CheckCard } from "@ant-design/pro-components"
+
 import {
   Divider,
   Steps,
@@ -39,6 +41,9 @@ import { AcademicPaper } from "../Types/AcademicPaper"
 const { useToken } = theme
 
 const Workflow = (props: { tabKey?: string }) => {
+  const [mode, setMode] = useState<
+    "qualitative" | undefined | "literatureReview"
+  >()
   const [current, setCurrent] = useState(0)
   const [searchLoading, setSearchLoading] = useState(false)
   const [results, setResults] = useState<AcademicPaper[] | null>(null)
@@ -87,10 +92,12 @@ const Workflow = (props: { tabKey?: string }) => {
 
   const evaluate = async (query: string, searchResults: AcademicPaper[]) => {
     setRelevancyLoading(true)
-    const relevantResults = await RankingService.rankPapers(
-      query,
-      searchResults?.filter((paper) => paper?.fullText) || []
-    )
+    const relevantResults = query
+      ? await RankingService.rankPapers(
+          query,
+          searchResults?.filter((paper) => paper?.fullText) || []
+        )
+      : searchResults
     setRelevantResults(relevantResults)
     setRelevancyLoading(false)
     setCurrent(2)
@@ -219,42 +226,85 @@ const Workflow = (props: { tabKey?: string }) => {
       title: "Work  ",
       content: (
         <>
-          {OpenAIService.getOpenAIKey() ? (
-            <div>
-              Literature Review
-              <StreamingComponent
-                prompt={`${
-                  relevantResults
-                    ?.map(
-                      (paper) =>
-                        `${paper?.authors
-                          ?.map((author) => author?.name)
-                          ?.join(", ")}, ${paper?.year}, ${
-                          paper?.title
-                        } write: ${paper?.fullText}`
-                    )
-                    ?.join("\n\n")
-                    ?.substring(0, 6000) || ""
-                }\n\nNow, given these papers, write a short, academic literature review of the most important findings answering '${searchQuery}'. Follow APA7. Return only with the literature review and nothing else. No titles and subtitles.`}
-              />
-            </div>
-          ) : (
-            <Result
-              status='404'
-              title='OpenAI API Key Missing'
-              subTitle='Unlock all features by adding your OpenAI API key.'
-              extra={
-                <ConfigurationForm
-                  onSubmit={() => {
-                    setCurrent(0)
-                  }}
-                />
-              }
+          <CheckCard.Group
+            onChange={(value) => {
+              setMode(value as any)
+            }}
+            value={mode}>
+            <CheckCard
+              title='Qualitative Analysis'
+              description='Analyze large amounts of qualitative data with the Gioia method.'
+              value='qualitative'
             />
-          )}
+            <CheckCard
+              title='Literature Review'
+              description='Let AI write the complete Literature Review for you.'
+              value='literatureReview'
+            />
+          </CheckCard.Group>
         </>
       ),
     },
+    ...(mode === "literatureReview"
+      ? [
+          {
+            title: "Literature Review",
+            content: (
+              <>
+                {OpenAIService.getOpenAIKey() ? (
+                  <div>
+                    Literature Review
+                    <StreamingComponent
+                      prompt={`${
+                        relevantResults
+                          ?.map(
+                            (paper) =>
+                              `${paper?.authors
+                                ?.map((author) => author?.name)
+                                ?.join(", ")}, ${paper?.year}, ${
+                                paper?.title
+                              } write: ${paper?.fullText}`
+                          )
+                          ?.join("\n\n")
+                          ?.substring(0, 6000) || ""
+                      }\n\nNow, given these papers, write a short, academic literature review of the most important findings answering '${searchQuery}'. Follow APA7. Return only with the literature review and nothing else. No titles and subtitles.`}
+                    />
+                  </div>
+                ) : (
+                  <Result
+                    status='404'
+                    title='OpenAI API Key Missing'
+                    subTitle='Unlock all features by adding your OpenAI API key.'
+                    extra={
+                      <ConfigurationForm
+                        onSubmit={() => {
+                          setCurrent(0)
+                        }}
+                      />
+                    }
+                  />
+                )}
+              </>
+            ),
+          },
+        ]
+      : []),
+    ...(mode === "qualitative"
+      ? [
+          {
+            title: "Coding",
+            content: <></>,
+          },
+          {
+            title: "Focused",
+            content: <></>,
+          },
+          {
+            title: "Aggregate",
+            content: <></>,
+          },
+        ]
+      : []),
   ]
 
   const next = () => {

@@ -14,6 +14,9 @@ export class RankingService {
     queryString?: string,
     papers?: AcademicPaper[]
   ): Promise<AcademicPaper[]> => {
+    if (!queryString) {
+      return papers || []
+    }
     try {
       const documents = [] as Document[]
       await asyncForEach(papers || [], async (paper) => {
