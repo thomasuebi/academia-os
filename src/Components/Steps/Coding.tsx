@@ -121,11 +121,19 @@ export const CodingStep = (props: { papers: AcademicPaper[] }) => {
       key: "focus",
       title: "2nd Order Coding",
       loading: secondOrderLoading,
-      content: JSON.stringify(focusCodes),
+      content: secondOrderLoading ? (
+        <p>AcademiaOS is busy coding.</p>
+      ) : (
+        <GioiaCoding
+          firstOrderCodes={initialCodes || []}
+          secondOrderCodes={focusCodes || {}}
+          aggregateDimensions={{}}
+        />
+      ),
     },
     {
       key: "aggregate",
-      title: "2nd Order Coding",
+      title: "Aggregate Dimensions",
       loading: aggregateLoading,
       content: (
         <GioiaCoding

@@ -224,13 +224,8 @@ const Workflow = (props: { tabKey?: string }) => {
             content: <CodingStep papers={relevantResults || []} />,
           },
           {
-            key: "focused",
-            title: "Focused",
-            content: <></>,
-          },
-          {
-            key: "aggregate",
-            title: "Aggregate",
+            key: "modelling",
+            title: "Modelling",
             content: <></>,
           },
         ]
