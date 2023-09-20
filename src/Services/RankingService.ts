@@ -27,7 +27,7 @@ export class RankingService {
         })
         const output = await splitter.createDocuments(
           [`${paper?.title || ""} ${paper?.fullText || ""}`],
-          [{ id: paper?.corpusId }]
+          [{ id: paper?.id }]
         )
         documents.push(...(output || []))
       })
@@ -56,11 +56,9 @@ export class RankingService {
       return (
         (uniqBy(
           resultsWithScore.map(([result, score]) => {
-            return papers?.find(
-              (paper) => paper?.corpusId === result?.metadata?.id
-            )
+            return papers?.find((paper) => paper?.id === result?.metadata?.id)
           }),
-          (paper) => paper?.corpusId || ""
+          (paper) => paper?.id || ""
         )?.filter((paper) => paper) as AcademicPaper[]) || []
       )
     } catch (error) {

@@ -12,9 +12,15 @@ import { useEffect, useState } from "react"
 import { OpenAIService } from "../Services/OpenAIService"
 import { CustomColumn } from "./CustomColumn"
 import { AcademicPaper } from "../Types/AcademicPaper"
+import { asyncMap } from "../Helpers/asyncMap"
 const { useToken } = theme
 
-export const PaperTable = (props: { papers: AcademicPaper[] }) => {
+export const PaperTable = (props: {
+  papers: AcademicPaper[]
+  customColumns?: string[]
+  responsiveToUpdates?: boolean
+  onPapersChange?: (papers: AcademicPaper[]) => void
+}) => {
   const dispatch = useDispatch()
   const { token } = useToken()
   const [columnAddSearchQuery, setColumnAddSearchQuery] = useState("")
@@ -22,10 +28,72 @@ export const PaperTable = (props: { papers: AcademicPaper[] }) => {
     dispatch(renameTab(key, newLabel))
   }
 
-  const [customColumns, setCustomColumns] = useState<any[]>([])
+  const [customColumns, setCustomColumns] = useState<any[]>(
+    props.customColumns || []
+  )
+
+  const [updatedPapers, setUpdatedPapers] = useState<AcademicPaper[]>(
+    props.papers
+  )
+
+  useEffect(() => {
+    props?.responsiveToUpdates && setUpdatedPapers(props.papers)
+  }, [props?.papers])
 
   const handleAddTab = (newTab: any) => {
     dispatch(addTab(newTab))
+  }
+
+  const convertToCSV = (papers: AcademicPaper[]): string => {
+    const header = Object.keys(papers[0]).join(",")
+    const rows = papers.map((paper) => {
+      return Object.values(paper)
+        .map((value) => {
+          if (value === null) return ""
+          if (Array.isArray(value)) return `"${value.join("; ")}"`
+          return typeof value === "string" ? `"${value}"` : value
+        })
+        .join(",")
+    })
+
+    return `${header}\n${rows.join("\n")}`
+  }
+
+  const convertToBIB = (papers: AcademicPaper[]): string => {
+    return papers
+      .map((paper) => {
+        return `@article{${paper.id},
+  title={${paper.title}},
+  author={${(paper.authors?.map((author) => author.name) || []).join(", ")}},
+  journal={${paper.journal}},
+  year={${paper.year}}
+}`
+      })
+      .join("\n\n")
+  }
+
+  const downloadCSV = () => {
+    const csvString = convertToCSV(updatedPapers)
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", "papers.csv")
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const downloadBIB = () => {
+    const bibString = convertToBIB(updatedPapers)
+    const blob = new Blob([bibString], { type: "text/plain;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", "papers.bib")
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -74,23 +142,39 @@ export const PaperTable = (props: { papers: AcademicPaper[] }) => {
           }
           style={{ width: 200 }}
           value={columnAddSearchQuery}
-          onSelect={(value) => {
+          onSelect={async (value) => {
             setCustomColumns([...customColumns, value])
+            let newPapers = [...updatedPapers]
+            newPapers = await asyncMap(newPapers, async (paper) => {
+              const newPaper = { ...paper } as AcademicPaper
+              if (newPaper[value]) return newPaper
+              newPaper[value] = await OpenAIService.getDetailAboutPaper(
+                newPaper,
+                value
+              )
+              return newPaper
+            })
+            setUpdatedPapers(newPapers)
             setColumnAddSearchQuery("")
           }}
           onSearch={(text) => setColumnAddSearchQuery(text)}
           suffixIcon={<PlusOutlined />}
           placeholder='Add a Custom Column'
         />
-        {/* <Button icon={<DownloadOutlined />}>Download CSV</Button>
-        <Button icon={<DownloadOutlined />}>Download BIB</Button> */}
+
+        <Button icon={<DownloadOutlined />} onClick={downloadCSV}>
+          Download CSV
+        </Button>
+        <Button icon={<DownloadOutlined />} onClick={downloadBIB}>
+          Download BIB
+        </Button>
       </Space>
       <Table
         // rowSelection={{ type: "checkbox" }}
         style={{ maxHeight: "calc(100vh - 270px)", overflowY: "auto" }}
         size='small'
         pagination={false}
-        dataSource={props?.papers || []}
+        dataSource={updatedPapers || []}
         columns={[
           {
             title: "Paper",
@@ -170,7 +254,27 @@ export const PaperTable = (props: { papers: AcademicPaper[] }) => {
             dataIndex: column,
             key: column,
             render: (text: string, record: AcademicPaper, index: number) => (
-              <CustomColumn record={record} detail={column} />
+              <Space
+                title={
+                  record[column]
+                    ? typeof record[column] === "string"
+                      ? record[column]
+                      : JSON.stringify(record[column])
+                    : "Loading..."
+                }
+                size={0}
+                direction={"vertical"}
+                style={{ width: "300px" }}>
+                <Typography.Paragraph
+                  ellipsis={{ rows: 5 }}
+                  style={{ marginBottom: 0 }}>
+                  {record[column]
+                    ? typeof record[column] === "string"
+                      ? record[column]
+                      : JSON.stringify(record[column])
+                    : "Loading..."}
+                </Typography.Paragraph>
+              </Space>
             ),
           })),
         ]}

@@ -35,9 +35,10 @@ import { PaperTable } from "./PaperTable"
 import { OpenAIService } from "../Services/OpenAIService"
 import ConfigurationForm from "./ConfigurationForm"
 import StreamingComponent from "./StreamingComponent"
-import logo from "../favicon.png"
-import { PDFUpload } from "./PDFUpload"
+
 import { AcademicPaper } from "../Types/AcademicPaper"
+import StepFind from "./Steps/Find"
+import { CodingStep } from "./Steps/Coding"
 const { useToken } = theme
 
 const Workflow = (props: { tabKey?: string }) => {
@@ -45,7 +46,6 @@ const Workflow = (props: { tabKey?: string }) => {
     "qualitative" | undefined | "literatureReview"
   >()
   const [current, setCurrent] = useState(0)
-  const [searchLoading, setSearchLoading] = useState(false)
   const [results, setResults] = useState<AcademicPaper[] | null>(null)
   const [relevantResults, setRelevantResults] = useState<
     AcademicPaper[] | null
@@ -53,6 +53,7 @@ const Workflow = (props: { tabKey?: string }) => {
   const [searchQuery, setSearchQuery] = useState("")
   const { token } = useToken()
   const [relevancyLoading, setRelevancyLoading] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const dispatch = useDispatch()
 
@@ -68,28 +69,6 @@ const Workflow = (props: { tabKey?: string }) => {
     setCurrent(value)
   }
 
-  const search = async (query: string) => {
-    handleRenameTab(props?.tabKey || "", query)
-    setSearchQuery(query)
-    setSearchLoading(true)
-    let searchResults = [] as AcademicPaper[]
-    try {
-      searchResults =
-        (await (await SearchRepository.searchPapers(query))?.nextPage()) || []
-    } catch (error) {}
-    if (!searchResults?.length) {
-      // TODO: Use GPT to create a better search query instead
-    }
-    searchResults = searchResults?.map((paper) => {
-      paper.fullText = paper?.fullText || paper?.abstract
-      return paper
-    })
-    setResults(searchResults)
-    setSearchLoading(false)
-    setCurrent(1)
-    await evaluate(query, searchResults)
-  }
-
   const evaluate = async (query: string, searchResults: AcademicPaper[]) => {
     setRelevancyLoading(true)
     const relevantResults = query
@@ -97,7 +76,7 @@ const Workflow = (props: { tabKey?: string }) => {
           query,
           searchResults?.filter((paper) => paper?.fullText) || []
         )
-      : searchResults
+      : searchResults?.filter((paper) => paper?.fullText)
     setRelevantResults(relevantResults)
     setRelevancyLoading(false)
     setCurrent(2)
@@ -105,98 +84,35 @@ const Workflow = (props: { tabKey?: string }) => {
 
   const steps = [
     {
+      key: "find",
       title: "Find",
       content: (
-        <>
-          <div style={{ width: "100%", textAlign: "center", padding: "20px" }}>
-            <img
-              alt='AcademiaOS'
-              src={logo}
-              style={{ width: "50px", height: "50px", marginBottom: "-20px" }}
-            />
-            <Typography.Title>AcademiaOS</Typography.Title>
-            <p style={{ marginTop: "-10px" }}>
-              <Tag>Open Source</Tag> <Tag>OpenAI-Powered</Tag>
-            </p>
-          </div>
-          <Row>
-            <Col span={24}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                <div
-                  style={{
-                    width: "100%",
-                    maxWidth: "400px",
-                    textAlign: "center",
-                  }}>
-                  <Form
-                    autoComplete='off'
-                    onFinish={(values) => search(values?.query)}>
-                    <Form.Item name='query'>
-                      <Input
-                        autoComplete='off'
-                        autoFocus
-                        disabled={searchLoading}
-                        size='large'
-                        placeholder='Search for Papers'
-                      />
-                    </Form.Item>
-                  </Form>
-                  <Space>
-                    <PDFUpload
-                      onAllUploadsFinished={(completedUploads) => {
-                        setSearchLoading(true)
-                        const searchResults = completedUploads.map(
-                          (upload) =>
-                            ({
-                              title: upload?.title,
-                              fullText: upload?.text,
-                            } as AcademicPaper)
-                        )
-                        setResults(searchResults)
-                        setSearchLoading(false)
-                        evaluate(searchQuery, searchResults)
-                      }}
-                    />
-                    {/* <Button type='link' icon={<CloudUploadOutlined />}>
-                      Upload PDFs
-                    </Button>
-                    <Button type='link' icon={<BookOutlined />}>
-                      From Library
-                    </Button> */}
-                  </Space>
-                </div>
-              </div>
-            </Col>
-          </Row>
-          {/* <Row gutter={16} style={{ marginTop: "50px" }}>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>
-                Find relevant literature
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>Analyze your own PDFs</Card>
-            </Col>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>
-                Work with interview transcripts
-              </Card>
-            </Col>
-          </Row> */}
-        </>
+        <StepFind
+          onLoadingChange={setSearchLoading}
+          onFinish={async (payload) => {
+            console.log(payload)
+            handleRenameTab(props?.tabKey || "", payload.searchQuery)
+            setSearchQuery(payload.searchQuery)
+            setResults(payload.searchResults)
+            setCurrent(1)
+            await evaluate(payload.searchQuery, payload.searchResults)
+          }}
+        />
       ),
     },
     {
+      key: "explore",
       loading: searchLoading,
       title: `Explore${results?.length ? ` (${results?.length})` : ""}`,
-      content: <PaperTable papers={results || []} />,
+      content: (
+        <PaperTable
+          onPapersChange={(papers) => setResults(papers)}
+          papers={results || []}
+        />
+      ),
     },
     {
+      key: "evaluate",
       loading: relevancyLoading,
       title: `Evaluate${
         relevantResults?.length ? ` (${relevantResults?.length})` : ""
@@ -204,7 +120,13 @@ const Workflow = (props: { tabKey?: string }) => {
       content: (
         <>
           {OpenAIService.getOpenAIKey() ? (
-            <PaperTable papers={relevantResults || []} />
+            <PaperTable
+              onPapersChange={(papers) => {
+                console.log("length", papers?.length)
+                setRelevantResults(papers)
+              }}
+              papers={relevantResults || []}
+            />
           ) : (
             <Result
               status='404'
@@ -223,6 +145,7 @@ const Workflow = (props: { tabKey?: string }) => {
       ),
     },
     {
+      key: "work",
       title: "Work  ",
       content: (
         <>
@@ -248,6 +171,7 @@ const Workflow = (props: { tabKey?: string }) => {
     ...(mode === "literatureReview"
       ? [
           {
+            key: "litrev",
             title: "Literature Review",
             content: (
               <>
@@ -292,14 +216,17 @@ const Workflow = (props: { tabKey?: string }) => {
     ...(mode === "qualitative"
       ? [
           {
+            key: "coding",
             title: "Coding",
-            content: <></>,
+            content: <CodingStep papers={relevantResults || []} />,
           },
           {
+            key: "focused",
             title: "Focused",
             content: <></>,
           },
           {
+            key: "aggregate",
             title: "Aggregate",
             content: <></>,
           },
@@ -370,7 +297,7 @@ const Workflow = (props: { tabKey?: string }) => {
                 )} */}
               </>,
             ]}>
-            {steps[current].content}
+            <div key={steps[current].key}>{steps[current].content}</div>
           </Card>
         </Col>
       </Row>
