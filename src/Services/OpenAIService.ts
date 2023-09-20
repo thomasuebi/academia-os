@@ -162,7 +162,7 @@ export class OpenAIService {
     // Create a message prompt for 2nd order coding
     const result = await model.predictMessages([
       new SystemMessage(
-        'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. For example, your output should look like this: {"some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
+        'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. For example, your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
       ),
       new HumanMessage(
         `The initial codes are as follows: ${jsonString}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 20-30 focus codes.`
@@ -193,7 +193,7 @@ export class OpenAIService {
     // Create a message prompt for the Aggregate Dimensions phase
     const result = await model.predictMessages([
       new SystemMessage(
-        'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions (5-7) that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. For example, your output should look like this: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure that the aggregate dimensions are grounded in the themes and to return ONLY a proper JSON object.'
+        'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions (5-7) that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. For example, your output should look like this, where the keys are the (quantifiable) dimensions: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure that the aggregate dimensions are grounded in the themes and to return ONLY a proper JSON object.'
       ),
       new HumanMessage(
         `The 2nd order codes are as follows: ${jsonString}\n\nPerform aggregation into theoretical dimensions according to the Gioia method and return a JSON object.`
@@ -209,6 +209,39 @@ export class OpenAIService {
     } catch (error) {
       console.log(error)
       return {}
+    }
+  }
+
+  static async brainstormApplicableTheories(
+    aggregateDimensions: Record<string, string[]>
+  ) {
+    const model = new ChatOpenAI({
+      maxTokens: 2000,
+      openAIApiKey: OpenAIService.getOpenAIKey(),
+    })
+
+    // Convert the JSON object of aggregate dimensions into a JSON string
+    const jsonString = JSON.stringify(aggregateDimensions)
+
+    // Create a message prompt for brainstorming applicable theories
+    const result = await model.predictMessages([
+      new SystemMessage(
+        `Your task is to brainstorm theoretical models from existing literature that could be applicable to the research findings. Each theory should be well-defined and should relate to one or more aggregate dimensions. The output should be a JSON-formatted array following this schema: [{"theory": string, "description": string, "relatedDimensions": string[], "possibleResearchQuestions": string[]}]`
+      ),
+      new HumanMessage(
+        `Our research aims to understand specific phenomena within a given context. We have identified multiple aggregate dimensions and second-order codes that emerged from our data. Could you suggest theories that could help explain these dimensions and codes? The aggregate dimensions and codes are as follows: ${jsonString}`
+      ),
+    ])
+
+    // Parse the output and return
+    try {
+      const applicableTheories = result?.content
+        ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+        : []
+      return applicableTheories
+    } catch (error) {
+      console.log(error)
+      return []
     }
   }
 }

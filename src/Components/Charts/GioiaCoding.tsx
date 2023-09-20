@@ -10,7 +10,7 @@ export const GioiaCoding = ({
   secondOrderCodes: { [key: string]: string[] }
   aggregateDimensions: { [key: string]: string[] }
 }) => {
-  const cleanCode = (code: string) => code?.replace(/(\s|-|\(|\))+/g, "_")
+  const cleanCode = (code: string) => code?.replace(/[^a-zA-Z0-9]/g, "_")
   const cleanText = (code: string) => code?.replace(/(\(|\))+/g, "_")
 
   const generateMermaidString = () => {
@@ -52,6 +52,7 @@ export const GioiaCoding = ({
       }
       str += "end\n"
     }
+    console.log(str)
     return str
   }
 

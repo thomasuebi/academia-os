@@ -39,6 +39,8 @@ import StreamingComponent from "./StreamingComponent"
 import { AcademicPaper } from "../Types/AcademicPaper"
 import StepFind from "./Steps/Find"
 import { CodingStep } from "./Steps/Coding"
+import { ModelData } from "../Types/ModelData"
+import { ModelingStep } from "./Steps/Modeling"
 const { useToken } = theme
 
 const Workflow = (props: { tabKey?: string }) => {
@@ -68,6 +70,8 @@ const Workflow = (props: { tabKey?: string }) => {
   const onChange = (value: number) => {
     setCurrent(value)
   }
+
+  const [modelData, setModelData] = useState<ModelData>({})
 
   const evaluate = async (query: string, searchResults: AcademicPaper[]) => {
     setRelevancyLoading(true)
@@ -220,13 +224,34 @@ const Workflow = (props: { tabKey?: string }) => {
       ? [
           {
             key: "coding",
-            title: "Coding",
-            content: <CodingStep papers={relevantResults || []} />,
+            title: `Coding${
+              Object.keys(modelData?.aggregateDimensions || {}).length > 0
+                ? ` (${
+                    Object.keys(modelData?.aggregateDimensions || {}).length
+                  })`
+                : ""
+            }`,
+            content: (
+              <CodingStep
+                onModelDataChange={(data) =>
+                  setModelData({ ...modelData, ...data })
+                }
+                modelData={modelData}
+                papers={relevantResults || []}
+              />
+            ),
           },
           {
-            key: "modelling",
-            title: "Modelling",
-            content: <></>,
+            key: "modeling",
+            title: "Modeling",
+            content: (
+              <ModelingStep
+                onModelDataChange={(data) =>
+                  setModelData({ ...modelData, ...data })
+                }
+                modelData={modelData}
+              />
+            ),
           },
         ]
       : []),

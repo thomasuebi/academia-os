@@ -7,17 +7,26 @@ import { OpenAIService } from "../../Services/OpenAIService"
 import Mermaid from "../Charts/Mermaid"
 import { GioiaCoding } from "../Charts/GioiaCoding"
 import { LoadingOutlined } from "@ant-design/icons"
+import { ModelData } from "../../Types/ModelData"
 
-export const CodingStep = (props: { papers: AcademicPaper[] }) => {
+export const CodingStep = (props: {
+  papers: AcademicPaper[]
+  modelData: ModelData
+  onModelDataChange: (modelData: ModelData) => void
+}) => {
   const [updatedPapers, setUpdatedPapers] = useState<AcademicPaper[]>(
     props?.papers
   )
 
-  const [initialCodes, setInitialCodes] = useState<string[]>([])
-  const [focusCodes, setFocusCodes] = useState<{ [code: string]: string[] }>({})
+  const [initialCodes, setInitialCodes] = useState<string[]>(
+    props?.modelData?.firstOrderCodes || []
+  )
+  const [focusCodes, setFocusCodes] = useState<{ [code: string]: string[] }>(
+    props?.modelData?.secondOrderCodes || {}
+  )
   const [aggregateDimensions, setAggregateDimensions] = useState<{
     [code: string]: string[]
-  }>({})
+  }>(props?.modelData?.aggregateDimensions || {})
   const [firstOrderLoading, setFirstOrderLoading] = useState(false)
   const [secondOrderLoading, setSecondOrderLoading] = useState(false)
   const [aggregateLoading, setAggregateLoading] = useState(false)
@@ -72,7 +81,7 @@ export const CodingStep = (props: { papers: AcademicPaper[] }) => {
     setAggregateDimensions(aggregateDimensions)
     setAggregateLoading(false)
     setCurrent(2)
-    return loadAggregateDimensions
+    return aggregateDimensions
   }
 
   const load = async () => {
@@ -84,8 +93,11 @@ export const CodingStep = (props: { papers: AcademicPaper[] }) => {
         const aggregateDimensionCodes = await loadAggregateDimensions(
           focusCodes
         )
-
-        console.log({ codes, focusCodes, aggregateDimensionCodes })
+        props?.onModelDataChange?.({
+          firstOrderCodes: codes,
+          secondOrderCodes: focusCodes,
+          aggregateDimensions: aggregateDimensionCodes,
+        })
       }
     }
   }
