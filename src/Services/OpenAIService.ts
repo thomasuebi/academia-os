@@ -162,7 +162,7 @@ export class OpenAIService {
     // Create a message prompt for 2nd order coding
     const result = await model.predictMessages([
       new SystemMessage(
-        'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. For example, your output should look like this: {"Higher-Level Theme 1": ["Emergent Theme 1", "Notable Concept"], "Higher-Level Theme 2": ["Observed Pattern"]}. Ensure to return ONLY a proper JSON object.'
+        'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. For example, your output should look like this: {"some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
       ),
       new HumanMessage(
         `The initial codes are as follows: ${jsonString}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 20-30 focus codes.`
@@ -188,12 +188,12 @@ export class OpenAIService {
     })
 
     // Convert the JSON object of 2nd order codes into a JSON string
-    const jsonString = JSON.stringify(secondOrderCodes)
+    const jsonString = JSON.stringify(Object.keys(secondOrderCodes))
 
     // Create a message prompt for the Aggregate Dimensions phase
     const result = await model.predictMessages([
       new SystemMessage(
-        'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. For example, your output should look like this: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure to return ONLY a proper JSON object.'
+        'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions (5-7) that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. For example, your output should look like this: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure that the aggregate dimensions are grounded in the themes and to return ONLY a proper JSON object.'
       ),
       new HumanMessage(
         `The 2nd order codes are as follows: ${jsonString}\n\nPerform aggregation into theoretical dimensions according to the Gioia method and return a JSON object.`

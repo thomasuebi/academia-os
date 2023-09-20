@@ -15,6 +15,7 @@
     "antd": "^5.9.0",
     "axios": "^1.5.0",
     "langchain": "^0.0.147",
+    "mermaid": "^10.4.0",
     "pdfjs-dist": "^3.10.111",
     "querystring": "^0.2.1",
     "react": "^18.2.0",
@@ -24,7 +25,6 @@
     "redux": "^4.2.1",
     "semanticscholarjs": "^1.0.4",
     "typescript": "^4.9.5",
-    "vis-network": "^9.1.6",
     "voy-search": "^0.6.2",
     "web-vitals": "^2.1.4"
   },

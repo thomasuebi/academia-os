@@ -4,6 +4,7 @@ import logo from "../../favicon.png"
 import { PDFUpload } from "../PDFUpload"
 import { AcademicPaper } from "../../Types/AcademicPaper"
 import { SearchRepository } from "../../Services/SearchService"
+import { GioiaCoding } from "../Charts/GioiaCoding"
 
 const StepFind = (props: {
   onFinish: (payload: {
@@ -147,6 +148,7 @@ const StepFind = (props: {
               </Card>
             </Col>
           </Row> */}
+      {}
     </>
   )
 }

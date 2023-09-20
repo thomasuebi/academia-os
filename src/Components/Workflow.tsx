@@ -91,7 +91,10 @@ const Workflow = (props: { tabKey?: string }) => {
           onLoadingChange={setSearchLoading}
           onFinish={async (payload) => {
             console.log(payload)
-            handleRenameTab(props?.tabKey || "", payload.searchQuery)
+            handleRenameTab(
+              props?.tabKey || "",
+              payload.searchQuery || "File Analysis"
+            )
             setSearchQuery(payload.searchQuery)
             setResults(payload.searchResults)
             setCurrent(1)
