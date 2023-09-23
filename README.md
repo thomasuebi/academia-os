@@ -17,6 +17,8 @@ Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-
 * **Upload PDFs**: If you have curated papers or other qualitative documents (such as interview transcripts) as PDFs, you can upload them for downstream tasks. Text-PDFs are handled in-browser while scanned PDFs are OCRd using Adobe PDF Extract API.
 * **Mass Information Extraction**: Structurally extract information (such as a paper's sentiment towards your thesis or information such as the count of study participants) from papers at scale.
 * **Automated Literature Review**: Navigate with a clean and intuitive interface.
+* **Coding of Qualitative Literature**: Let AI code your interviews, social media posts or other qualitative literature.
+* **Automated Theory Construction**: Get a theoretical model explaining your qualitative data in just a few steps.
 
 ## 🔧 Getting Started 
 
