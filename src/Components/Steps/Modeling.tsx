@@ -1,4 +1,4 @@
-import { Button, Space, Steps, Table } from "antd"
+import { Button, Space, Steps, Table, Typography, message } from "antd"
 import { AcademicPaper } from "../../Types/AcademicPaper"
 import { PaperTable } from "../PaperTable"
 import { useEffect, useState } from "react"
@@ -15,29 +15,45 @@ export const ModelingStep = (props: {
 }) => {
   const [exploreLoading, setExploreLoading] = useState(false)
   const [constructLoading, setConstructLoading] = useState(false)
+  const [visualizationLoading, setVisualizationLoading] = useState(false)
 
   const [applicableTheories, setApplicableTheories] = useState<any[]>([])
 
-  const load = async () => {
-    setExploreLoading(true)
-    const applicable = await OpenAIService.brainstormApplicableTheories(
+  const loadModel = async () => {
+    setConstructLoading(true)
+    const model = await OpenAIService.modelConstruction(
       props?.modelData?.aggregateDimensions || {}
     )
-    setApplicableTheories(applicable)
-    setExploreLoading(false)
-    // if (codes.length > 0) {
-    //   const focusCodes = await loadFocusCodes(codes)
-    //   if (Object.keys(focusCodes).length > 0) {
-    //     const aggregateDimensionCodes = await loadAggregateDimensions(
-    //       focusCodes
-    //     )
-    //     props?.onModelDataChange?.({
-    //       firstOrderCodes: codes,
-    //       secondOrderCodes: focusCodes,
-    //       aggregateDimensions: aggregateDimensionCodes,
-    //     })
-    //   }
-    // }
+    props.onModelDataChange({ ...props.modelData, modelDescription: model })
+
+    setConstructLoading(false)
+    setVisualizationLoading(true)
+    const visualization = await OpenAIService.modelVisualization(
+      props?.modelData?.aggregateDimensions || {},
+      model || props?.modelData?.modelDescription || ""
+    )
+    setCurrent(1)
+    props.onModelDataChange({
+      ...props.modelData,
+      modelVisualization: visualization,
+    })
+    setCurrent(2)
+    setVisualizationLoading(false)
+  }
+
+  const load = async () => {
+    setExploreLoading(true)
+    if (props?.modelData?.aggregateDimensions) {
+      const applicable = await OpenAIService.brainstormApplicableTheories(
+        props?.modelData?.aggregateDimensions || {}
+      )
+      setApplicableTheories(applicable)
+      setExploreLoading(false)
+
+      await loadModel()
+    } else {
+      message.error("Please finish the previous steps first.")
+    }
   }
 
   // useEffect(() => {
@@ -79,11 +95,43 @@ export const ModelingStep = (props: {
           />
         ),
     },
+    // {
+    //   key: "construct",
+    //   title: "Interrelationships",
+    //   loading: false,
+    //   content: <></>,
+    // },
     {
-      key: "construct",
-      title: "Theory Construction",
-      loading: false,
-      content: <></>,
+      key: "model",
+      title: "Construct",
+      loading: constructLoading,
+      content: (
+        <Space direction='vertical'>
+          <Space direction='horizontal'>
+            <Button loading={constructLoading} onClick={loadModel}>
+              Build Model
+            </Button>
+          </Space>
+          <Typography.Paragraph>
+            {props?.modelData?.modelDescription}
+          </Typography.Paragraph>
+        </Space>
+      ),
+    },
+    {
+      key: "visualization",
+      title: "Visualization",
+      loading: visualizationLoading,
+      content: (
+        <Space direction='vertical' style={{ width: "100%" }}>
+          <Space direction='horizontal'>
+            <Button loading={constructLoading} onClick={loadModel}>
+              Build Model
+            </Button>
+          </Space>
+          <Mermaid chart={props?.modelData?.modelVisualization} />
+        </Space>
+      ),
     },
   ]
 
