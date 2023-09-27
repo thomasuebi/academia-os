@@ -76,7 +76,15 @@ export const ModelingStep = (props: {
       loading: exploreLoading,
       content:
         !exploreLoading && applicableTheories.length === 0 ? (
-          <Button onClick={load}>Start Modeling</Button>
+          <Space>
+            <Input
+              style={{ width: "300px" }}
+              value={modelingRemarks}
+              onChange={(e) => setModelingRemarks(e.target.value)}
+              placeholder='Free-text remarks for the modeling ...'
+            />
+            <Button onClick={load}>Start Modeling</Button>
+          </Space>
         ) : (
           <Table
             dataSource={applicableTheories}
