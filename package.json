@@ -14,7 +14,7 @@
     "@types/react-dom": "^18.2.7",
     "antd": "^5.9.0",
     "axios": "^1.5.0",
-    "langchain": "^0.0.147",
+    "langchain": "^0.0.154",
     "mermaid": "^10.4.0",
     "pdfjs-dist": "^3.10.111",
     "querystring": "^0.2.1",

@@ -33,9 +33,12 @@ export class RankingService {
       })
 
       // Create embeddings
-      const embeddings = new OpenAIEmbeddings({
-        openAIApiKey: OpenAIService.getOpenAIKey(),
-      })
+      const embeddings = new OpenAIEmbeddings(
+        {
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
       // Create the Voy store.
       const store = new MemoryVectorStore(embeddings)
 

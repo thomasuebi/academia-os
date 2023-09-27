@@ -1,5 +1,14 @@
 import React from "react"
-import { Form, Input, Typography, FormInstance, Button } from "antd"
+import {
+  Form,
+  Input,
+  Typography,
+  FormInstance,
+  Button,
+  Space,
+  Row,
+  Col,
+} from "antd"
 import axios from "axios"
 
 const { Paragraph, Text } = Typography
@@ -10,46 +19,79 @@ interface ConfigurationFormProps {
 
 const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
   const [form] = Form.useForm<FormInstance>()
+  const [showMoreOptions, setShowMoreOptions] = React.useState(false)
+
+  const defaultValues = {
+    openAIKey: localStorage.getItem("openAIKey"),
+    email: localStorage.getItem("email"),
+    heliconeEndpoint: localStorage.getItem("heliconeEndpoint"),
+    heliconeKey: localStorage.getItem("heliconeKey"),
+    adobePDFOCR_client_id: localStorage.getItem("adobePDFOCR_client_id"),
+    adobePDFOCR_client_secret: localStorage.getItem(
+      "adobePDFOCR_client_secret"
+    ),
+  }
 
   const handleSubmit = async () => {
     try {
       const values = (await form.validateFields()) as any
       console.log("Form values:", values)
 
-      // Assuming 'values.email' contains the user's email
-      const email = values.email
-      const openAIKey = values.openAIKey
+      localStorage.setItem("email", values.email ?? defaultValues.email ?? "")
+      localStorage.setItem(
+        "openAIKey",
+        values.openAIKey ?? defaultValues.openAIKey ?? ""
+      )
+      localStorage.setItem(
+        "heliconeEndpoint",
+        values.heliconeEndpoint ?? defaultValues.heliconeEndpoint ?? ""
+      )
+      localStorage.setItem(
+        "heliconeKey",
+        values.heliconeKey ?? defaultValues.heliconeKey ?? ""
+      )
+      localStorage.setItem(
+        "adobePDFOCR_client_id",
+        values.adobePDFOCR_client_id ??
+          defaultValues.adobePDFOCR_client_id ??
+          ""
+      )
+      localStorage.setItem(
+        "adobePDFOCR_client_secret",
+        values.adobePDFOCR_client_secret ??
+          defaultValues.adobePDFOCR_client_secret ??
+          ""
+      )
 
-      localStorage.setItem("email", email)
-      localStorage.setItem("openAIKey", openAIKey)
+      try {
+        // Hubspot API configurations
+        const portalId = "26150643"
+        const formId = "77f39c46-20a4-43f7-807a-c44a17caac8a"
+        const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`
 
-      // Hubspot API configurations
-      const portalId = "26150643"
-      const formId = "77f39c46-20a4-43f7-807a-c44a17caac8a"
-      const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`
+        // Create payload
+        const data = {
+          submittedAt: new Date().getTime().toString(),
+          fields: [
+            {
+              name: "email",
+              value: values.email,
+            },
+          ],
+          // Include any other context data or legal consent options you need
+        }
 
-      // Create payload
-      const data = {
-        submittedAt: new Date().getTime().toString(),
-        fields: [
-          {
-            name: "email",
-            value: email,
+        // Make API request
+        const response = await axios.post(url, data, {
+          headers: {
+            "Content-Type": "application/json",
           },
-        ],
-        // Include any other context data or legal consent options you need
-      }
+        })
 
-      // Make API request
-      const response = await axios.post(url, data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.status === 200) {
-        console.log("Submission successful:", response.data)
-      }
+        if (response.status === 200) {
+          console.log("Submission successful:", response.data)
+        }
+      } catch (error) {}
 
       // Trigger any other submit actions
       onSubmit && onSubmit()
@@ -74,24 +116,109 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
           extra='We will keep you updated about new features and updates.'>
           <Input
             placeholder='john.doe@example.com'
-            defaultValue={localStorage.getItem("email") || ""}
+            defaultValue={defaultValues.email || ""}
           />
         </Form.Item>
         <Form.Item
           //   label='OpenAI Key'
           name='openAIKey'
-          extra='This key is needed to access advanced AI functionalities.'>
+          extra={
+            <span>
+              This{" "}
+              <Typography.Link
+                target='_blank'
+                href='https://platform.openai.com/'>
+                OpenAI key
+              </Typography.Link>{" "}
+              is needed to access advanced AI functionalities.
+            </span>
+          }>
           <Input.Password
             placeholder='Enter your OpenAI API key'
-            defaultValue={localStorage.getItem("openAIKey") || ""}
+            defaultValue={defaultValues.openAIKey || ""}
           />
         </Form.Item>
-        {/* <Paragraph type='secondary'>
-          <Text>
-            We respect your privacy and handle your information with care.
-          </Text>
-        </Paragraph> */}
+        {showMoreOptions && (
+          <>
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item
+                  //   label='OpenAI Key'
+                  name='heliconeEndpoint'
+                  extra={
+                    <span>
+                      Use{" "}
+                      <Typography.Link
+                        target='_blank'
+                        href='https://www.helicone.ai/'>
+                        Helicone.ai
+                      </Typography.Link>{" "}
+                      to track your usage.
+                    </span>
+                  }>
+                  <Input
+                    placeholder='Helicone Endpoint (optional)'
+                    defaultValue={defaultValues.heliconeEndpoint || ""}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  //   label='OpenAI Key'
+                  name='heliconeKey'>
+                  <Input.Password
+                    placeholder='Helicone Key (optional)'
+                    defaultValue={defaultValues.heliconeKey || ""}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item
+                  //   label='OpenAI Key'
+                  name='adobePDFOCR_client_id'
+                  extra={
+                    <span>
+                      Use{" "}
+                      <Typography.Link
+                        target='_blank'
+                        href='https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/'>
+                        Adobe
+                      </Typography.Link>{" "}
+                      to read scanned PDFs.
+                    </span>
+                  }>
+                  <Input
+                    placeholder='Adobe OCR Client ID (optional)'
+                    defaultValue={defaultValues.adobePDFOCR_client_id || ""}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  //   label='OpenAI Key'
+                  name='adobePDFOCR_client_secret'>
+                  <Input.Password
+                    placeholder='Adobe OCR Client Secret (optional)'
+                    defaultValue={defaultValues.adobePDFOCR_client_secret || ""}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </>
+        )}
+
         <div style={{ width: "100%", textAlign: "center" }}>
+          {showMoreOptions ? (
+            <Button type='link' onClick={() => setShowMoreOptions(false)}>
+              Less Options
+            </Button>
+          ) : (
+            <Button type='link' onClick={() => setShowMoreOptions(true)}>
+              More Options
+            </Button>
+          )}
           <Button type='primary' onClick={handleSubmit}>
             Submit
           </Button>

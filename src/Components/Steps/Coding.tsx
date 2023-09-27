@@ -1,4 +1,4 @@
-import { Button, Space, Steps } from "antd"
+import { Button, Input, Space, Steps, message } from "antd"
 import { AcademicPaper } from "../../Types/AcademicPaper"
 import { PaperTable } from "../PaperTable"
 import { useEffect, useState } from "react"
@@ -18,6 +18,8 @@ export const CodingStep = (props: {
     props?.papers
   )
 
+  const [initialCodingRemarks, setInitialCodingRemarks] = useState<string>("")
+
   const [initialCodes, setInitialCodes] = useState<string[]>(
     props?.modelData?.firstOrderCodes || []
   )
@@ -30,6 +32,7 @@ export const CodingStep = (props: {
   const [firstOrderLoading, setFirstOrderLoading] = useState(false)
   const [secondOrderLoading, setSecondOrderLoading] = useState(false)
   const [aggregateLoading, setAggregateLoading] = useState(false)
+  const [initialCodesCount, setInitialCodesCount] = useState(0)
 
   const loadInitialCodes = async () => {
     setFirstOrderLoading(true)
@@ -38,15 +41,12 @@ export const CodingStep = (props: {
       const newPaper = { ...paper } as AcademicPaper
       if (newPaper["Initial Codes"]) return newPaper
       newPaper["Initial Codes"] = await OpenAIService.initialCodingOfPaper(
-        newPaper
+        newPaper,
+        initialCodingRemarks
       )
-      console.log(
-        `Loaded initial codes for paper ${index} of ${newPapers.length}`,
-        newPaper["Initial Codes"]
-      )
+      setInitialCodesCount((count) => count + newPaper["Initial Codes"].length)
       return newPaper
     })
-    console.log("Finished")
     setUpdatedPapers(newPapers)
     const codes = Array.from(
       new Set(
@@ -58,6 +58,7 @@ export const CodingStep = (props: {
         }, [] as string[])
       )
     )
+    setInitialCodesCount(codes.length)
     setFirstOrderLoading(false)
 
     setInitialCodes(codes)
@@ -116,11 +117,19 @@ export const CodingStep = (props: {
   const steps = [
     {
       key: "initial",
-      title: "1st Order Coding",
+      title: `1st Order Coding (${initialCodesCount || 0})`,
       loading: firstOrderLoading,
       content:
         !firstOrderLoading && initialCodes.length === 0 ? (
-          <Button onClick={load}>Start Coding</Button>
+          <Space direction='vertical'>
+            <Input
+              style={{ width: "300px" }}
+              value={initialCodingRemarks}
+              onChange={(e) => setInitialCodingRemarks(e.target.value)}
+              placeholder='Free-text remarks for the initial coding ...'
+            />
+            <Button onClick={load}>Start Coding</Button>
+          </Space>
         ) : (
           <PaperTable
             papers={updatedPapers}

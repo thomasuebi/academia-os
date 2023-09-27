@@ -16,11 +16,14 @@ export class OpenAIService {
     return localStorage.getItem("openAIKey") || ""
   }
   static async streamCompletion(prompt: string, callback: any) {
-    const chat = new ChatOpenAI({
-      maxTokens: 800,
-      streaming: true,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const chat = new ChatOpenAI(
+      {
+        maxTokens: 800,
+        streaming: true,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     await chat.call([new HumanMessage(prompt)], {
       callbacks: [
@@ -34,10 +37,13 @@ export class OpenAIService {
   }
 
   static async getDetailAboutPaper(paper: AcademicPaper, detail: string) {
-    const model = new ChatOpenAI({
-      maxTokens: 20,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 20,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     let fullText = paper?.fullText
 
@@ -55,9 +61,12 @@ export class OpenAIService {
       documents.push(...(output || []))
 
       // Create embeddings
-      const embeddings = new OpenAIEmbeddings({
-        openAIApiKey: OpenAIService.getOpenAIKey(),
-      })
+      const embeddings = new OpenAIEmbeddings(
+        {
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
       // Create the Voy store.
       const store = new MemoryVectorStore(embeddings)
 
@@ -94,11 +103,14 @@ export class OpenAIService {
     return ""
   }
 
-  static async initialCodingOfPaper(paper: AcademicPaper) {
-    const model = new ChatOpenAI({
-      maxTokens: 300, // Modify as needed
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+  static async initialCodingOfPaper(paper: AcademicPaper, remarks?: string) {
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 300, // Modify as needed
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     let fullText = paper?.fullText
     let chunks = []
@@ -133,7 +145,11 @@ export class OpenAIService {
           'You are tasked with applying the initial coding phase of the Gioia method to the provided academic paper. In this phase, scrutinize the text to identify emergent themes, concepts, or patterns. Your output should be a JSON-formatted array of strings no longer than 7 words, each representing a distinct initial code. For example, your output should look like this: ["Emergent Theme 1", "Notable Concept", "Observed Pattern"]. Ensure to return ONLY a proper JSON array of strings.'
         ),
         new HumanMessage(
-          `${paper?.title}\n${chunk.pageContent}\n\nPerform initial coding according to the Gioia method on the given paper, return a JSON array.`
+          `${paper?.title}\n${
+            chunk.pageContent
+          }\n\nPerform initial coding according to the Gioia method on the given paper.${
+            remarks ? ` Remark: ${remarks}. ` : ""
+          } Return a JSON array.`
         ),
       ])
 
@@ -150,11 +166,26 @@ export class OpenAIService {
     return initialCodesArray
   }
 
+  static openAIConfiguration() {
+    const heliconeEndpoint = localStorage.getItem("heliconeEndpoint")
+    return {
+      basePath: heliconeEndpoint || undefined,
+      baseOptions: {
+        headers: {
+          "Helicone-Auth": `Bearer ${localStorage.getItem("heliconeKey")}`,
+        },
+      },
+    }
+  }
+
   static async secondOrderCoding(codesArray: string[]) {
-    const model = new ChatOpenAI({
-      maxTokens: 2000,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 2000,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     // Convert the array of initial codes into a JSON string
     const jsonString = JSON.stringify(codesArray)
@@ -182,10 +213,13 @@ export class OpenAIService {
   }
 
   static async aggregateDimensions(secondOrderCodes: Record<string, string[]>) {
-    const model = new ChatOpenAI({
-      maxTokens: 2000,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 2000,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     // Convert the JSON object of 2nd order codes into a JSON string
     const jsonString = JSON.stringify(Object.keys(secondOrderCodes))
@@ -215,10 +249,13 @@ export class OpenAIService {
   static async brainstormApplicableTheories(
     aggregateDimensions: Record<string, string[]>
   ) {
-    const model = new ChatOpenAI({
-      maxTokens: 2000,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 2000,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     // Convert the JSON object of aggregate dimensions into a JSON string
     const jsonString = JSON.stringify(aggregateDimensions)
@@ -246,12 +283,16 @@ export class OpenAIService {
   }
 
   static async modelConstruction(
-    aggregateDimensions: Record<string, string[]>
+    aggregateDimensions: Record<string, string[]>,
+    modelingRemarks: string
   ) {
-    const model = new ChatOpenAI({
-      maxTokens: 2000,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 2000,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     // Convert the JSON object of aggregate dimensions into a JSON string
     const jsonString = JSON.stringify(aggregateDimensions)
@@ -262,7 +303,9 @@ export class OpenAIService {
         `You are a qualitative researcher tasked with constructing a theoretical model from existing literature that could be applicable to the research findings. The model should be well-defined and should relate to one or more aggregate dimensions. Emphasize the relationships between the dimensions and the model. Explain how the relationships might be causal or correlational, be clear on the narrative. You are non-conversational and should not respond to the user, but give a general description of model.`
       ),
       new HumanMessage(
-        `The aggregate dimensions and codes are as follows: ${jsonString}`
+        `The aggregate dimensions and codes are as follows: ${jsonString}${
+          modelingRemarks ? ` Remarks: ${modelingRemarks}` : ""
+        }`
       ),
     ])
 
@@ -271,12 +314,16 @@ export class OpenAIService {
 
   static async modelVisualization(
     aggregateDimensions: Record<string, string[]>,
-    modelDescription: string
+    modelDescription: string,
+    modelingRemarks: string
   ) {
-    const model = new ChatOpenAI({
-      maxTokens: 2000,
-      openAIApiKey: OpenAIService.getOpenAIKey(),
-    })
+    const model = new ChatOpenAI(
+      {
+        maxTokens: 2000,
+        openAIApiKey: OpenAIService.getOpenAIKey(),
+      },
+      OpenAIService.openAIConfiguration()
+    )
 
     // Convert the JSON object of aggregate dimensions into a JSON string
     const jsonString = JSON.stringify(aggregateDimensions)
@@ -309,7 +356,11 @@ export class OpenAIService {
         As we have seen in above diagram, ==> is used to indicate a strong direct influence, --> is used to indicate a weaker influence, -.-> is used to indicate a moderating relationship, and --- is used to indicate a correlation.
         Now, given a model description, you should generate a MermaidJS diagram like the one above, showing the interrelationship between different concepts. Keep it simple and effective. You are non-conversational and should not respond to the user, only return the MermaidJS code.`
       ),
-      new HumanMessage(`${modelDescription}`),
+      new HumanMessage(
+        `${modelDescription}${
+          modelingRemarks ? `\n\nRemarks: ${modelingRemarks}` : ""
+        }`
+      ),
     ])
 
     return result?.content

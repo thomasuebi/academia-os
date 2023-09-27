@@ -1,4 +1,4 @@
-import { Button, Space, Steps, Table, Typography, message } from "antd"
+import { Button, Input, Space, Steps, Table, Typography, message } from "antd"
 import { AcademicPaper } from "../../Types/AcademicPaper"
 import { PaperTable } from "../PaperTable"
 import { useEffect, useState } from "react"
@@ -16,13 +16,14 @@ export const ModelingStep = (props: {
   const [exploreLoading, setExploreLoading] = useState(false)
   const [constructLoading, setConstructLoading] = useState(false)
   const [visualizationLoading, setVisualizationLoading] = useState(false)
-
+  const [modelingRemarks, setModelingRemarks] = useState("")
   const [applicableTheories, setApplicableTheories] = useState<any[]>([])
 
   const loadModel = async () => {
     setConstructLoading(true)
     const model = await OpenAIService.modelConstruction(
-      props?.modelData?.aggregateDimensions || {}
+      props?.modelData?.aggregateDimensions || {},
+      modelingRemarks
     )
     props.onModelDataChange({ ...props.modelData, modelDescription: model })
 
@@ -30,7 +31,8 @@ export const ModelingStep = (props: {
     setVisualizationLoading(true)
     const visualization = await OpenAIService.modelVisualization(
       props?.modelData?.aggregateDimensions || {},
-      model || props?.modelData?.modelDescription || ""
+      model || props?.modelData?.modelDescription || "",
+      modelingRemarks
     )
     setCurrent(1)
     props.onModelDataChange({
@@ -108,6 +110,12 @@ export const ModelingStep = (props: {
       content: (
         <Space direction='vertical'>
           <Space direction='horizontal'>
+            <Input
+              style={{ width: "300px" }}
+              value={modelingRemarks}
+              onChange={(e) => setModelingRemarks(e.target.value)}
+              placeholder='Free-text remarks for the modeling ...'
+            />
             <Button loading={constructLoading} onClick={loadModel}>
               Build Model
             </Button>
@@ -125,6 +133,12 @@ export const ModelingStep = (props: {
       content: (
         <Space direction='vertical' style={{ width: "100%" }}>
           <Space direction='horizontal'>
+            <Input
+              style={{ width: "300px" }}
+              value={modelingRemarks}
+              onChange={(e) => setModelingRemarks(e.target.value)}
+              placeholder='Free-text remarks for the modeling ...'
+            />
             <Button loading={constructLoading} onClick={loadModel}>
               Build Model
             </Button>

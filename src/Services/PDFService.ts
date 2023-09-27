@@ -28,8 +28,8 @@ export class PDFService {
       }
     } catch (error) {}
 
-    const clientId = localStorage.getItem("client_id")
-    const clientSecret = localStorage.getItem("client_secret")
+    const clientId = localStorage.getItem("adobePDFOCR_client_id")
+    const clientSecret = localStorage.getItem("adobePDFOCR_client_secret")
     if (!(clientId && clientSecret)) {
       notification.error({
         message:
