@@ -1,8 +1,9 @@
 import React, { useRef, useState } from "react"
-import { Button, Space, Tabs, Typography, message } from "antd"
+import { Button, Slider, Space, Switch, Tabs, Typography, message } from "antd"
 import Workflow from "./Workflow"
 import {
   BookOutlined,
+  FormatPainterFilled,
   GithubOutlined,
   SettingOutlined,
   SlackOutlined,
@@ -10,10 +11,12 @@ import {
 import { useSelector, useDispatch } from "react-redux"
 import { addTab, removeTab } from "../Redux/actionCreators"
 import ConfigurationModal from "./Configuration"
+import { useTheme } from "../Providers/ThemeContext" // import ThemeProvider and useTheme
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string
 
 const RootTabs: React.FC = () => {
+  const { theme, toggleTheme } = useTheme()
   const newTabIndex = useRef(0)
   const [isConfigurationVisible, setIsConfigurationVisible] = useState(false)
 
@@ -95,6 +98,10 @@ const RootTabs: React.FC = () => {
               GitHub
             </Button>
             {/* <Button type='text' icon={<BookOutlined />}></Button> */}
+            <Button
+              type='text'
+              icon={<FormatPainterFilled />}
+              onClick={() => toggleTheme()}></Button>
             <Button
               type='text'
               onClick={() => setIsConfigurationVisible(true)}
