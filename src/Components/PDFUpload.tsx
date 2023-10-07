@@ -44,7 +44,8 @@ export const PDFUpload: FC<UploadTestProps> = ({ onAllUploadsFinished }) => {
             { text: extractedText, title: file.name },
           ])
           onSuccess()
-        } else if (file.name?.toLowerCase()?.endsWith(".json")) {
+        } else {
+          // if (file.name?.toLowerCase()?.endsWith(".json"))
           const json = new TextDecoder().decode(arrayBuffer)
           setCompletedUploads((prev) => [
             ...prev,

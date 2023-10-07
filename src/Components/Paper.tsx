@@ -1,4 +1,4 @@
-import { FilePdfOutlined } from "@ant-design/icons"
+import { FilePdfOutlined, LinkOutlined } from "@ant-design/icons"
 import { Card, Col, Row, Space, Typography } from "antd"
 import { AcademicPaper } from "../Types/AcademicPaper"
 
@@ -40,7 +40,14 @@ export const PaperComponent = (props: {
                 {(props?.paper?.citationCount ?? 0).toLocaleString("en-US")}{" "}
                 citations
               </span>
-              <span>
+              <span style={{ marginRight: 20 }}>
+                {(props?.paper?.url as any) && (
+                  <a target={"_blank"} href={props?.paper?.url as any}>
+                    <LinkOutlined /> URL
+                  </a>
+                )}
+              </span>
+              <span style={{ marginRight: 20 }}>
                 {(props?.paper?.openAccessPdf as any)?.status === "GREEN" && (
                   <a
                     target={"_blank"}

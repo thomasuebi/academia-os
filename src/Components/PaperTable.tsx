@@ -1,11 +1,20 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { AutoComplete, Button, Space, Table, Typography, theme } from "antd"
+import {
+  AutoComplete,
+  Button,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  theme,
+} from "antd"
 import { useDispatch } from "react-redux"
 import { renameTab, addTab } from "../Redux/actionCreators"
 import { PaperComponent } from "./Paper"
 import {
   DownloadOutlined,
   FilePdfOutlined,
+  LinkOutlined,
   PlusOutlined,
 } from "@ant-design/icons"
 import { useEffect, useState } from "react"
@@ -218,7 +227,14 @@ export const PaperTable = (props: {
                     {(record?.citationCount ?? 0).toLocaleString("en-US")}{" "}
                     citations
                   </span>
-                  <span>
+                  <span style={{ marginRight: 20 }}>
+                    {(record?.url as any) && (
+                      <a target={"_blank"} href={record?.url as any}>
+                        <LinkOutlined /> URL
+                      </a>
+                    )}
+                  </span>
+                  <span style={{ marginRight: 20 }}>
                     {(record?.openAccessPdf as any)?.status === "GREEN" && (
                       <a
                         target={"_blank"}
@@ -253,29 +269,44 @@ export const PaperTable = (props: {
             title: column,
             dataIndex: column,
             key: column,
-            render: (text: string, record: AcademicPaper, index: number) => (
-              <Space
-                title={
-                  record[column]
-                    ? typeof record[column] === "string"
-                      ? record[column]
-                      : JSON.stringify(record[column])
-                    : "Loading..."
+            render: (text: string, record: AcademicPaper, index: number) => {
+              let isArray = false
+              try {
+                if (
+                  Array.isArray(record[column]) ||
+                  Array.isArray(JSON.parse(record[column]))
+                ) {
+                  isArray = true
                 }
-                size={0}
-                direction={"vertical"}
-                style={{ width: "300px" }}>
-                <Typography.Paragraph
-                  ellipsis={{ rows: 5 }}
-                  style={{ marginBottom: 0 }}>
-                  {record[column]
-                    ? typeof record[column] === "string"
-                      ? record[column]
-                      : JSON.stringify(record[column])
-                    : "Loading..."}
-                </Typography.Paragraph>
-              </Space>
-            ),
+              } catch (error) {}
+              return (
+                <Space
+                  title={
+                    record[column]
+                      ? typeof record[column] === "string"
+                        ? record[column]
+                        : JSON.stringify(record[column])
+                      : "Loading..."
+                  }
+                  size={0}
+                  direction={"vertical"}
+                  style={{ width: "300px" }}>
+                  <Typography.Paragraph
+                    ellipsis={{ rows: 5 }}
+                    style={{ marginBottom: 0 }}>
+                    {record[column]
+                      ? typeof record[column] === "string"
+                        ? isArray
+                          ? JSON.parse(record[column]).map((item: any) => (
+                              <Tag>{item}</Tag>
+                            ))
+                          : record[column]
+                        : JSON.stringify(record[column])
+                      : "Loading..."}
+                  </Typography.Paragraph>
+                </Space>
+              )
+            },
           })),
         ]}
       />

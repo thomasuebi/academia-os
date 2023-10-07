@@ -13,6 +13,10 @@ export const GioiaCoding = ({
   const cleanCode = (code: string) => code?.replace(/[^a-zA-Z0-9]/g, "_")
   const cleanText = (code: string) => code?.replace(/(\(|\))+/g, "_")
 
+  if (firstOrderCodes.length >= 100) {
+    firstOrderCodes = []
+  }
+
   const generateMermaidString = () => {
     let str = "graph LR\n"
 

@@ -10,6 +10,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai"
 import { HumanMessage, SystemMessage } from "langchain/schema"
 import { OpenAI } from "langchain/llms/openai"
 import { AcademicPaper } from "../Types/AcademicPaper"
+import { type ClientOptions } from "openai"
 
 export class OpenAIService {
   public static getOpenAIKey = () => {
@@ -175,7 +176,8 @@ export class OpenAIService {
           "Helicone-Auth": `Bearer ${localStorage.getItem("heliconeKey")}`,
         },
       },
-    }
+      // timeout: 30000,
+    } as ClientOptions
   }
 
   static async secondOrderCoding(codesArray: string[]) {
@@ -187,29 +189,55 @@ export class OpenAIService {
       OpenAIService.openAIConfiguration()
     )
 
-    // Convert the array of initial codes into a JSON string
+    let chunks = []
+
     const jsonString = JSON.stringify(codesArray)
 
-    // Create a message prompt for 2nd order coding
-    const result = await model.predictMessages([
-      new SystemMessage(
-        'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. As a general example, "employee sentiment" could be a 2nd order code to 1st level codes "Positive feelings toward new policy" and "Sense of control" Your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
-      ),
-      new HumanMessage(
-        `The initial codes are as follows: ${jsonString}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 20 focus codes.`
-      ),
-    ])
-
-    // Parse the output and return
-    try {
-      const secondOrderCodes = result?.content
-        ? JSON.parse(result?.content?.replace(/\\n/g, " "))
-        : {}
-      return secondOrderCodes
-    } catch (error) {
-      console.log(error)
-      return {}
+    // Splitting the paper into smaller chunks if it's too large
+    if ((jsonString.length || 0) > 5000) {
+      const splitter = new CharacterTextSplitter({
+        separator: " ",
+        chunkSize: 5000,
+        chunkOverlap: 50,
+      })
+      const output = await splitter.createDocuments([jsonString], [{}])
+      chunks.push(...(output || []))
+    } else {
+      chunks.push({
+        pageContent: jsonString,
+      })
     }
+
+    // Initialize array to hold codes for each chunk
+    const secondOrderCodes = {} as any
+
+    // Loop through each chunk and apply initial coding
+    await asyncForEach(chunks, async (chunk, index) => {
+      // Create a message prompt for 2nd order coding
+      const result = await model.predictMessages([
+        new SystemMessage(
+          'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. As a general example, "employee sentiment" could be a 2nd order code to 1st level codes "Positive feelings toward new policy" and "Sense of control" Your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
+        ),
+        new HumanMessage(
+          `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 20 focus codes.`
+        ),
+      ])
+      // Parse the output and return
+      try {
+        const newSecondOrderCodes = result?.content
+          ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+          : {}
+        Object.keys(newSecondOrderCodes).forEach((key) => {
+          secondOrderCodes[key] = uniqBy(
+            [...(secondOrderCodes[key] || []), ...newSecondOrderCodes[key]],
+            (item) => item
+          )
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    })
+    return secondOrderCodes
   }
 
   static async aggregateDimensions(secondOrderCodes: Record<string, string[]>) {
