@@ -8,6 +8,7 @@ import Mermaid from "../Charts/Mermaid"
 import { GioiaCoding } from "../Charts/GioiaCoding"
 import { LoadingOutlined } from "@ant-design/icons"
 import { ModelData } from "../../Types/ModelData"
+import { RemarkComponent } from "../RemarkComponent"
 
 export const CodingStep = (props: {
   papers: AcademicPaper[]
@@ -18,7 +19,9 @@ export const CodingStep = (props: {
     props?.papers
   )
 
-  const [initialCodingRemarks, setInitialCodingRemarks] = useState<string>("")
+  const [initialCodingRemarks, setInitialCodingRemarks] = useState<string>(
+    props.modelData?.remarks || ""
+  )
 
   const [initialCodes, setInitialCodes] = useState<string[]>(
     props?.modelData?.firstOrderCodes || []
@@ -122,11 +125,16 @@ export const CodingStep = (props: {
       content:
         !firstOrderLoading && initialCodes.length === 0 ? (
           <Space direction='vertical'>
-            <Input
-              style={{ width: "300px" }}
+            <RemarkComponent
+              papers={updatedPapers}
               value={initialCodingRemarks}
-              onChange={(e) => setInitialCodingRemarks(e.target.value)}
-              placeholder='Free-text remarks for the initial coding ...'
+              onValueChange={(e) => {
+                setInitialCodingRemarks(e)
+                props?.onModelDataChange?.({
+                  ...(props?.modelData || {}),
+                  remarks: e,
+                })
+              }}
             />
             <Button onClick={load}>Start Coding</Button>
           </Space>

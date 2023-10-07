@@ -118,6 +118,47 @@ export class OpenAIService {
     }
   }
 
+  static async findTentativeResearchQuestions(
+    papers: AcademicPaper[]
+  ): Promise<string[]> {
+    try {
+      const model = new ChatOpenAI(
+        {
+          maxTokens: 400,
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
+
+      if ((papers?.length || 0) > 0) {
+        const result = await model.predictMessages([
+          new SystemMessage(
+            "You are provided with a list of paper titles and you are tasked to find research questions that might be answered developing a new theoretical model. Return a JSON array of strings, each representing a potential research question. Return only a JSON array of strings, no additional text."
+          ),
+          new HumanMessage(
+            `${papers
+              .map((paper) => `- ${paper?.title}`)
+              .join(
+                "\n"
+              )}\n\nNow, provide an array of 5 potential research questions.`
+          ),
+        ])
+        try {
+          const codes = result?.content
+            ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+            : []
+          return codes
+        } catch (error) {
+          console.log(error)
+        }
+      }
+      return []
+    } catch (error) {
+      OpenAIService.handleError(error)
+      return []
+    }
+  }
+
   static async initialCodingOfPaper(paper: AcademicPaper, remarks?: string) {
     try {
       const model = new ChatOpenAI(

@@ -4,4 +4,5 @@ export interface ModelData {
   aggregateDimensions?: { [key: string]: string[] }
   modelDescription?: string
   modelVisualization?: string
+  remarks?: string
 }

@@ -16,7 +16,9 @@ export const ModelingStep = (props: {
   const [exploreLoading, setExploreLoading] = useState(false)
   const [constructLoading, setConstructLoading] = useState(false)
   const [visualizationLoading, setVisualizationLoading] = useState(false)
-  const [modelingRemarks, setModelingRemarks] = useState("")
+  const [modelingRemarks, setModelingRemarks] = useState(
+    props?.modelData?.remarks || ""
+  )
   const [applicableTheories, setApplicableTheories] = useState<any[]>([])
 
   const loadModel = async () => {
@@ -80,7 +82,13 @@ export const ModelingStep = (props: {
             <Input
               style={{ width: "300px" }}
               value={modelingRemarks}
-              onChange={(e) => setModelingRemarks(e.target.value)}
+              onChange={(e) => {
+                setModelingRemarks(e.target.value)
+                props?.onModelDataChange?.({
+                  ...(props?.modelData || {}),
+                  remarks: e.target.value,
+                })
+              }}
               placeholder='Free-text remarks for the modeling ...'
             />
             <Button onClick={load}>Start Modeling</Button>
