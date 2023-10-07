@@ -11,18 +11,9 @@ import { ModelData } from "../../Types/ModelData"
 import { RemarkComponent } from "../RemarkComponent"
 
 export const CodingStep = (props: {
-  papers: AcademicPaper[]
   modelData: ModelData
   onModelDataChange: (modelData: ModelData) => void
 }) => {
-  const [updatedPapers, setUpdatedPapers] = useState<AcademicPaper[]>(
-    props?.papers
-  )
-
-  const [initialCodingRemarks, setInitialCodingRemarks] = useState<string>(
-    props.modelData?.remarks || ""
-  )
-
   const [initialCodes, setInitialCodes] = useState<string[]>(
     props?.modelData?.firstOrderCodes || []
   )
@@ -39,18 +30,20 @@ export const CodingStep = (props: {
 
   const loadInitialCodes = async () => {
     setFirstOrderLoading(true)
-    let newPapers = [...updatedPapers]
+    let newPapers = [...(props.modelData.papers || [])]
     newPapers = await asyncMap(newPapers, async (paper, index) => {
       const newPaper = { ...paper } as AcademicPaper
       if (newPaper["Initial Codes"]) return newPaper
       newPaper["Initial Codes"] = await OpenAIService.initialCodingOfPaper(
         newPaper,
-        initialCodingRemarks
+        props.modelData?.remarks
       )
       setInitialCodesCount((count) => count + newPaper["Initial Codes"].length)
       return newPaper
     })
-    setUpdatedPapers(newPapers)
+    props.onModelDataChange({
+      papers: newPapers,
+    })
     const codes = Array.from(
       new Set(
         newPapers?.reduce((acc, paper) => {
@@ -126,12 +119,10 @@ export const CodingStep = (props: {
         !firstOrderLoading && initialCodes.length === 0 ? (
           <Space direction='vertical'>
             <RemarkComponent
-              papers={updatedPapers}
-              value={initialCodingRemarks}
+              papers={props?.modelData?.papers || []}
+              value={props.modelData?.remarks || ""}
               onValueChange={(e) => {
-                setInitialCodingRemarks(e)
                 props?.onModelDataChange?.({
-                  ...(props?.modelData || {}),
                   remarks: e,
                 })
               }}
@@ -140,7 +131,7 @@ export const CodingStep = (props: {
           </Space>
         ) : (
           <PaperTable
-            papers={updatedPapers}
+            papers={props?.modelData?.papers || []}
             responsiveToUpdates={true}
             customColumns={["Initial Codes"]}
           />

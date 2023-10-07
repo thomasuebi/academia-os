@@ -8,6 +8,7 @@ import Mermaid from "../Charts/Mermaid"
 import { GioiaCoding } from "../Charts/GioiaCoding"
 import { LoadingOutlined } from "@ant-design/icons"
 import { ModelData } from "../../Types/ModelData"
+import { RemarkComponent } from "../RemarkComponent"
 
 export const ModelingStep = (props: {
   modelData: ModelData
@@ -27,7 +28,7 @@ export const ModelingStep = (props: {
       props?.modelData?.aggregateDimensions || {},
       modelingRemarks
     )
-    props.onModelDataChange({ ...props.modelData, modelDescription: model })
+    props.onModelDataChange({ modelDescription: model })
 
     setConstructLoading(false)
     setVisualizationLoading(true)
@@ -38,7 +39,6 @@ export const ModelingStep = (props: {
     )
     setCurrent(1)
     props.onModelDataChange({
-      ...props.modelData,
       modelVisualization: visualization,
     })
     setCurrent(2)
@@ -79,17 +79,14 @@ export const ModelingStep = (props: {
       content:
         !exploreLoading && applicableTheories.length === 0 ? (
           <Space>
-            <Input
-              style={{ width: "300px" }}
-              value={modelingRemarks}
-              onChange={(e) => {
-                setModelingRemarks(e.target.value)
+            <RemarkComponent
+              papers={props.modelData.papers || []}
+              value={props.modelData?.remarks || ""}
+              onValueChange={(e) => {
                 props?.onModelDataChange?.({
-                  ...(props?.modelData || {}),
-                  remarks: e.target.value,
+                  remarks: e,
                 })
               }}
-              placeholder='Free-text remarks for the modeling ...'
             />
             <Button onClick={load}>Start Modeling</Button>
           </Space>

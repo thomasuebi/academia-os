@@ -296,11 +296,11 @@ export const PaperTable = (props: {
                     style={{ marginBottom: 0 }}>
                     {record[column]
                       ? typeof record[column] === "string"
-                        ? isArray
-                          ? JSON.parse(record[column]).map((item: any) => (
-                              <Tag>{item}</Tag>
-                            ))
-                          : record[column]
+                        ? record[column]
+                        : Array.isArray(record[column])
+                        ? record[column].map((item: any) => (
+                            <Tag style={{ fontSize: "6pt" }}>{item}</Tag>
+                          ))
                         : JSON.stringify(record[column])
                       : "Loading..."}
                   </Typography.Paragraph>

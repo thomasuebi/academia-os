@@ -10,7 +10,6 @@ export const RemarkComponent = (props: {
   value: string
   onValueChange: (val: string) => void
 }) => {
-  const [modelingRemarks, setModelingRemarks] = useState("")
   const [researchQuestions, setResearchQuestions] = useState<string[]>([])
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -34,9 +33,8 @@ export const RemarkComponent = (props: {
         suffixIcon={loading && <LoadingOutlined />}
         style={{ width: 300 }}
         options={researchQuestions.map((question) => ({ value: question }))}
-        value={modelingRemarks}
+        value={props.value}
         onChange={(value) => {
-          setModelingRemarks(value)
           props?.onValueChange?.(value)
           console.log(value)
         }}

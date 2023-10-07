@@ -49,9 +49,7 @@ const Workflow = (props: { tabKey?: string }) => {
   >()
   const [current, setCurrent] = useState(0)
   const [results, setResults] = useState<AcademicPaper[] | null>(null)
-  const [relevantResults, setRelevantResults] = useState<
-    AcademicPaper[] | null
-  >(null)
+
   const [searchQuery, setSearchQuery] = useState("")
   const { token } = useToken()
   const [relevancyLoading, setRelevancyLoading] = useState(false)
@@ -81,7 +79,7 @@ const Workflow = (props: { tabKey?: string }) => {
           searchResults?.filter((paper) => paper?.fullText) || []
         )
       : searchResults?.filter((paper) => paper?.fullText)
-    setRelevantResults(relevantResults)
+    setModelData((prevValue) => ({ ...prevValue, papers: relevantResults }))
     setRelevancyLoading(false)
     setCurrent(2)
   }
@@ -122,17 +120,16 @@ const Workflow = (props: { tabKey?: string }) => {
       key: "evaluate",
       loading: relevancyLoading,
       title: `Evaluate${
-        relevantResults?.length ? ` (${relevantResults?.length})` : ""
+        modelData.papers?.length ? ` (${modelData.papers?.length})` : ""
       }`,
       content: (
         <>
           {OpenAIService.getOpenAIKey() ? (
             <PaperTable
               onPapersChange={(papers) => {
-                console.log("length", papers?.length)
-                setRelevantResults(papers)
+                setModelData((prevValue) => ({ ...prevValue, papers }))
               }}
-              papers={relevantResults || []}
+              papers={modelData.papers || []}
             />
           ) : (
             <Result
@@ -187,7 +184,7 @@ const Workflow = (props: { tabKey?: string }) => {
                     Literature Review
                     <StreamingComponent
                       prompt={`${
-                        relevantResults
+                        modelData.papers
                           ?.map(
                             (paper) =>
                               `${paper?.authors
@@ -233,11 +230,11 @@ const Workflow = (props: { tabKey?: string }) => {
             }`,
             content: (
               <CodingStep
-                onModelDataChange={(data) =>
-                  setModelData({ ...modelData, ...data })
-                }
+                onModelDataChange={(data) => {
+                  console.log(data)
+                  setModelData((prev) => ({ ...prev, ...data }))
+                }}
                 modelData={modelData}
-                papers={relevantResults || []}
               />
             ),
           },
@@ -247,7 +244,7 @@ const Workflow = (props: { tabKey?: string }) => {
             content: (
               <ModelingStep
                 onModelDataChange={(data) =>
-                  setModelData({ ...modelData, ...data })
+                  setModelData((prev) => ({ ...prev, ...data }))
                 }
                 modelData={modelData}
               />
