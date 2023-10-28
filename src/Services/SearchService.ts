@@ -9,7 +9,9 @@ export class SearchRepository {
   ): Promise<PaginatedResults<Paper> | null> => {
     const sch = new SemanticScholar()
     try {
-      const paginatedResults = await sch.search_paper(query || "")
+      const paginatedResults = await sch.search_paper(
+        encodeURIComponent(query || "")
+      )
       return paginatedResults
     } catch (error) {
       console.log(error)

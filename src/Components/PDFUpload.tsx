@@ -8,9 +8,13 @@ interface UploadTestProps {
   onAllUploadsFinished?: (
     completedUploads: { text: string; title: string }[]
   ) => void
+  ref?: any
 }
 
-export const PDFUpload: FC<UploadTestProps> = ({ onAllUploadsFinished }) => {
+export const PDFUpload: FC<UploadTestProps> = ({
+  onAllUploadsFinished,
+  ref,
+}) => {
   const [texts, setTexts] = useState<string[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [uploadCount, setUploadCount] = useState<number>(0)
@@ -72,7 +76,7 @@ export const PDFUpload: FC<UploadTestProps> = ({ onAllUploadsFinished }) => {
           showUploadList={false}
           multiple={true}
           beforeUpload={beforeUpload}>
-          <Button loading={loading} icon={<UploadOutlined />}>
+          <Button ref={ref} loading={loading} icon={<UploadOutlined />}>
             Upload PDFs
           </Button>
         </Upload>

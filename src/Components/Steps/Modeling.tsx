@@ -15,6 +15,8 @@ export const ModelingStep = (props: {
   onModelDataChange: (modelData: ModelData) => void
 }) => {
   const [exploreLoading, setExploreLoading] = useState(false)
+  const [interrelationshipsLoading, setInterrelationshipsLoading] =
+    useState(false)
   const [constructLoading, setConstructLoading] = useState(false)
   const [visualizationLoading, setVisualizationLoading] = useState(false)
   const [modelingRemarks, setModelingRemarks] = useState(
@@ -110,12 +112,12 @@ export const ModelingStep = (props: {
           />
         ),
     },
-    // {
-    //   key: "construct",
-    //   title: "Interrelationships",
-    //   loading: false,
-    //   content: <></>,
-    // },
+    {
+      key: "interrelationships",
+      title: "Interrelationships",
+      loading: interrelationshipsLoading,
+      content: <></>,
+    },
     {
       key: "model",
       title: "Construct",

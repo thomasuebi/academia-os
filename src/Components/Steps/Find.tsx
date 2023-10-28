@@ -1,5 +1,17 @@
-import { Col, Form, Input, Row, Space, Tag, Typography } from "antd"
-import React, { useEffect, useState } from "react"
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  Popover,
+  Row,
+  Space,
+  Tag,
+  Tour,
+  Typography,
+} from "antd"
+import { CheckCard } from "@ant-design/pro-components"
+import React, { useEffect, useRef, useState } from "react"
 import logo from "../../favicon.png"
 import { PDFUpload } from "../PDFUpload"
 import { AcademicPaper } from "../../Types/AcademicPaper"
@@ -16,6 +28,9 @@ const StepFind = (props: {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [results, setResults] = useState<AcademicPaper[]>([])
+  const [uploadTourOpen, setUploadTourOpen] = useState<boolean>(false)
+
+  const refUpload = useRef(null)
 
   const search = async (query: string) => {
     setSearchQuery(query)
@@ -105,7 +120,7 @@ const StepFind = (props: {
                   />
                 </Form.Item>
               </Form>
-              <Space>
+              <Space ref={refUpload}>
                 <PDFUpload
                   onAllUploadsFinished={(completedUploads) => {
                     setSearchLoading(true)
@@ -133,22 +148,74 @@ const StepFind = (props: {
           </div>
         </Col>
       </Row>
-      {/* <Row gutter={16} style={{ marginTop: "50px" }}>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>
-                Find relevant literature
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>Analyze your own PDFs</Card>
-            </Col>
-            <Col span={8}>
-              <Card style={{ textAlign: "center" }}>
-                Work with interview transcripts
-              </Card>
-            </Col>
-          </Row> */}
-      {}
+      <Row gutter={16} style={{ marginTop: "50px" }}>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => search("Influence of AI on Society")}
+            title={"Influence of AI on Society"}
+            description={"Search academic papers"}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => setUploadTourOpen(true)}
+            title={"Explore Transcripts"}
+            description={"Upload your own interview transcripts"}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => search("Health Effects Cocoa")}
+            title={"Health Effects Cocoa"}
+            description={"Search academic papers"}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => setUploadTourOpen(true)}
+            title={"Analyze PDFs"}
+            description={"Upload your own PDFs"}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => search("AI Ethics")}
+            title={"Develop Model on AI Ethics"}
+            description={"Search academic papers"}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <CheckCard
+            style={{ width: "100%" }}
+            checked={false}
+            onClick={() => search("Management of Small Teams")}
+            title={"Management of Small Teams"}
+            description={"Search academic papers"}
+          />
+        </Col>
+      </Row>
+      {/* Tour Guide */}
+      <Tour
+        open={uploadTourOpen}
+        onClose={() => setUploadTourOpen(false)}
+        steps={[
+          {
+            title: "Upload File",
+            description: "Here you can upload your PDFs, transcripts, etc.",
+            target: () => refUpload.current,
+          },
+        ]}
+      />
     </>
   )
 }
