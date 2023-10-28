@@ -114,7 +114,7 @@ export const ModelingStep = (props: {
     },
     {
       key: "interrelationships",
-      title: "Interrelationships",
+      title: "Inter-Relationships",
       loading: interrelationshipsLoading,
       content: <></>,
     },
