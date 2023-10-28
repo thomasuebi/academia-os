@@ -9,6 +9,7 @@ import { GioiaCoding } from "../Charts/GioiaCoding"
 import { LoadingOutlined } from "@ant-design/icons"
 import { ModelData } from "../../Types/ModelData"
 import { RemarkComponent } from "../RemarkComponent"
+import { Interrelationships } from "./Modeling/Interrelationships"
 
 export const ModelingStep = (props: {
   modelData: ModelData
@@ -27,7 +28,7 @@ export const ModelingStep = (props: {
   const loadModel = async () => {
     setConstructLoading(true)
     const model = await OpenAIService.modelConstruction(
-      props?.modelData?.aggregateDimensions || {},
+      props?.modelData,
       modelingRemarks
     )
     props.onModelDataChange({ modelDescription: model })
@@ -39,22 +40,36 @@ export const ModelingStep = (props: {
       model || props?.modelData?.modelDescription || "",
       modelingRemarks
     )
-    setCurrent(1)
+    setCurrent(2)
     props.onModelDataChange({
       modelVisualization: visualization,
     })
-    setCurrent(2)
+    setCurrent(3)
     setVisualizationLoading(false)
   }
 
   const load = async () => {
-    setExploreLoading(true)
+    // setExploreLoading(true)
     if (props?.modelData?.aggregateDimensions) {
-      const applicable = await OpenAIService.brainstormApplicableTheories(
-        props?.modelData?.aggregateDimensions || {}
-      )
-      setApplicableTheories(applicable)
-      setExploreLoading(false)
+      // const applicable = await OpenAIService.brainstormApplicableTheories(
+      //   props?.modelData?.aggregateDimensions || {}
+      // )
+      // setApplicableTheories(applicable)
+      // setExploreLoading(false)
+
+      setInterrelationshipsLoading(true)
+      const tuples = await OpenAIService.conceptTuples(props.modelData)
+      props.onModelDataChange({
+        interrelationships: tuples.map((tuple) => ({ concepts: tuple })),
+      })
+      setCurrent(1)
+      const interrelationships =
+        await OpenAIService.findRelevantParagraphsAndSummarize(
+          props.modelData,
+          tuples
+        )
+      props.onModelDataChange({ interrelationships })
+      setInterrelationshipsLoading(false)
 
       await loadModel()
     } else {
@@ -114,9 +129,14 @@ export const ModelingStep = (props: {
     },
     {
       key: "interrelationships",
-      title: "Inter-Relationships",
+      title: "Interrelationships",
       loading: interrelationshipsLoading,
-      content: <></>,
+      content: (
+        <Interrelationships
+          modelData={props.modelData}
+          onModelDataChange={props.onModelDataChange}
+        />
+      ),
     },
     {
       key: "model",

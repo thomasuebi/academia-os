@@ -11,6 +11,8 @@ import { HumanMessage, SystemMessage } from "langchain/schema"
 import { OpenAI } from "langchain/llms/openai"
 import { AcademicPaper } from "../Types/AcademicPaper"
 import { type ClientOptions } from "openai"
+import { ModelData } from "../Types/ModelData"
+import { asyncMap } from "../Helpers/asyncMap"
 
 export class OpenAIService {
   public static getOpenAIKey = () => {
@@ -199,7 +201,7 @@ export class OpenAIService {
         console.log(`Processing chunk ${index + 1} of ${chunks.length}`)
         const result = await model.predictMessages([
           new SystemMessage(
-            'You are tasked with applying the initial coding phase of the Gioia method to the provided academic paper. In this phase, scrutinize the text to identify emergent themes, concepts, or patterns. Your output should be a JSON-formatted array of strings no longer than 7 words, each representing a distinct initial code. For example, your output should look like this: ["Emergent Theme 1", "Notable Concept", "Observed Pattern"]. Ensure to return ONLY a proper JSON array of strings.'
+            'You are tasked with applying the initial coding phase of the Gioia method to the provided academic paper. In this phase, scrutinize the text to identify emergent themes, concepts, or patterns. Your output should be a JSON-formatted array of strings no longer than 7 words, each representing a distinct initial code in the language of the raw source. For example, your output should look like this: ["Emergent Theme 1", "Notable Concept", "Observed Pattern"]. Ensure to return ONLY a proper JSON array of strings.'
           ),
           new HumanMessage(
             `${paper?.title}\n${
@@ -280,7 +282,7 @@ export class OpenAIService {
             'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. As a general example, "employee sentiment" could be a 2nd order code to 1st level codes "Positive feelings toward new policy" and "Sense of control" Your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
           ),
           new HumanMessage(
-            `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 20 focus codes.`
+            `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 12 focus codes.`
           ),
         ])
         // Parse the output and return
@@ -385,8 +387,147 @@ export class OpenAIService {
     }
   }
 
+  static async conceptTuples(
+    modelData: ModelData
+  ): Promise<[string, string][]> {
+    try {
+      const model = new ChatOpenAI(
+        {
+          maxTokens: 2000,
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
+
+      // Convert the JSON object of aggregate dimensions into a JSON string
+      const jsonString = JSON.stringify(modelData?.aggregateDimensions)
+
+      // Create a message prompt for brainstorming applicable theories
+      const result = await model.predictMessages([
+        new SystemMessage(
+          `Your task is to hypothesize which concepts could be related to each other. Return a JSON-formatted array of tuple arrays, where each tuple array represents a possible relationship between two concepts. The output should be a JSON-formatted array following this schema: [[string, string], [string, string], ...]. E.g. [["Knowledge Management", "Organizational Performance"]] This allows us to in the next step research the relationship between the concepts in the literature.`
+        ),
+        new HumanMessage(
+          `Our research aims to understand ${
+            modelData.query || "specific phenomena within a given context"
+          }.${
+            modelData.remarks ? `Remarks: ${modelData.remarks}.` : ""
+          } We have identified multiple aggregate dimensions and second-order codes that emerged from our data.
+          ${jsonString}
+          Now, hypothesize which concepts could be related to each other and return only the JSON-formatted array of 10 - 20 tuples.`
+        ),
+      ])
+
+      // Parse the output and return
+      try {
+        const conceptTuples = result?.content
+          ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+          : []
+        return conceptTuples
+      } catch (error) {
+        console.log(error)
+        return []
+      }
+    } catch (error) {
+      OpenAIService.handleError(error)
+      return []
+    }
+  }
+
+  static async findRelevantParagraphsAndSummarize(
+    modelData: ModelData,
+    conceptTuples: [string, string][]
+  ): Promise<
+    {
+      concepts: string[]
+      interrelationship: string
+      evidence: string
+    }[]
+  > {
+    try {
+      const documents: Document[] = []
+      const embeddings = new OpenAIEmbeddings(
+        {
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
+
+      // Create MemoryVectorStore for embeddings
+      const store = new MemoryVectorStore(embeddings)
+
+      // Split text and prepare documents
+      await asyncForEach(modelData.papers || [], async (paper) => {
+        const splitter = new CharacterTextSplitter({
+          separator: " ",
+          chunkSize: 1000,
+          chunkOverlap: 50,
+        })
+
+        const output = await splitter.createDocuments(
+          [`${paper?.title || ""} ${paper?.fullText || ""}`],
+          [{ id: paper?.id }]
+        )
+        documents.push(...(output || []))
+      })
+
+      // Add documents to store
+      await store.addDocuments(documents)
+
+      const interrelationShips = await asyncMap(
+        conceptTuples,
+        async ([concept1, concept2]) => {
+          const query1 = await embeddings.embedQuery(
+            `${concept1} - ${concept2} relationship`
+          )
+
+          const resultsWithScore = await store.similaritySearchVectorWithScore(
+            query1,
+            4
+          )
+
+          const relevantParagraphs1 = resultsWithScore
+            .map(([result, score]) => {
+              return result.pageContent
+            })
+            ?.join("\n\n")
+
+          // Now, summarize the interrelationship between the two concepts using GPT-3.5
+          const model = new ChatOpenAI(
+            {
+              maxTokens: 200,
+              openAIApiKey: OpenAIService.getOpenAIKey(),
+            },
+            OpenAIService.openAIConfiguration()
+          )
+
+          const summaryResult = await model.predictMessages([
+            new SystemMessage(
+              `Your task is to summarize the interrelationship between ${concept1} and ${concept2} in one short sentence. If evidence, include information about correlation or causation, direct, mediated or conditional interaction, static or dynamic relationship, feedback loops, uni- or bi-directional, strong or weak.`
+            ),
+            new HumanMessage(
+              `${relevantParagraphs1}\n\nNow, provide a summary in one short sentence.`
+            ),
+          ])
+
+          return {
+            concepts: [concept1, concept2],
+            interrelationship: `${summaryResult?.content}`,
+            evidence: relevantParagraphs1,
+          }
+        }
+      )
+
+      return interrelationShips
+    } catch (error) {
+      OpenAIService.handleError(error)
+      return []
+    }
+  }
+
   static async modelConstruction(
-    aggregateDimensions: Record<string, string[]>,
+    modelData: ModelData,
+
     modelingRemarks: string
   ) {
     try {
@@ -399,7 +540,7 @@ export class OpenAIService {
       )
 
       // Convert the JSON object of aggregate dimensions into a JSON string
-      const jsonString = JSON.stringify(aggregateDimensions)
+      const jsonString = JSON.stringify(modelData.aggregateDimensions)
 
       // Create a message prompt for brainstorming applicable theories
       const result = await model.predictMessages([
@@ -409,7 +550,14 @@ export class OpenAIService {
         new HumanMessage(
           `The aggregate dimensions and codes are as follows: ${jsonString}${
             modelingRemarks ? ` Remarks: ${modelingRemarks}` : ""
-          }`
+          }\n\n${modelData.interrelationships
+            ?.map(
+              (interrelationship) =>
+                `${interrelationship?.concepts?.join(" - ")}: ${
+                  interrelationship?.interrelationship
+                }`
+            )
+            .join("\n")}\n\nNow, construct a theoretical model.`
         ),
       ])
 
@@ -463,7 +611,7 @@ export class OpenAIService {
 
 
         As we have seen in above diagram, ==> is used to indicate a strong direct influence, --> is used to indicate a weaker influence, -.-> is used to indicate a moderating relationship, and --- is used to indicate a correlation.
-        Now, given a model description, you should generate a MermaidJS diagram like the one above, showing the interrelationship between different concepts. Keep it simple and effective. You are non-conversational and should not respond to the user, only return the MermaidJS code.`
+        Now, given a model description, you should generate a MermaidJS diagram like the one above, showing the interrelationship between different concepts. Keep it simple and effective. You are non-conversational and should not respond to the user, only return the MermaidJS code, nothing else.`
         ),
         new HumanMessage(
           `${modelDescription}${

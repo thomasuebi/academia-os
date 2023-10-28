@@ -16,6 +16,8 @@ import {
   theme,
   Result,
   Tag,
+  Modal,
+  Upload,
 } from "antd"
 import {
   BookOutlined,
@@ -57,6 +59,8 @@ const Workflow = (props: { tabKey?: string }) => {
 
   const dispatch = useDispatch()
 
+  const [isRestoreModalVisible, setIsRestoreModalVisible] = useState(false)
+
   const handleRenameTab = (key: string, newLabel: string) => {
     dispatch(renameTab(key, newLabel))
   }
@@ -84,6 +88,36 @@ const Workflow = (props: { tabKey?: string }) => {
     setCurrent(2)
   }
 
+  const saveToJsonFile = () => {
+    const blob = new Blob([JSON.stringify(modelData)], {
+      type: "application/json",
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "academia-os.json"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Function to handle file upload
+  const handleFileUpload = (file: any) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e?.target?.result
+      if (typeof content === "string") {
+        const parsedContent = JSON.parse(content)
+        setModelData(parsedContent)
+        setIsRestoreModalVisible(false)
+      } else {
+        // Handle the case when content is not a string
+        console.error("Uploaded file content is not a string")
+      }
+    }
+    reader.readAsText(file)
+    return false
+  }
+
   const steps = [
     {
       key: "find",
@@ -97,6 +131,7 @@ const Workflow = (props: { tabKey?: string }) => {
               props?.tabKey || "",
               payload.searchQuery || "File Analysis"
             )
+            setModelData((prev) => ({ ...prev, query: payload.searchQuery }))
             setSearchQuery(payload.searchQuery)
             setResults(payload.searchResults)
             setCurrent(1)
@@ -289,6 +324,19 @@ const Workflow = (props: { tabKey?: string }) => {
                 Give Feedback or Request Feature
               </a>
             </div>
+            <a onClick={saveToJsonFile}>Save Session</a>
+            <a onClick={() => setIsRestoreModalVisible(true)}>
+              Restore Session
+            </a>
+            <Modal
+              title='Restore from JSON File'
+              open={isRestoreModalVisible}
+              onCancel={() => setIsRestoreModalVisible(false)}
+              footer={null}>
+              <Upload customRequest={({ file }) => handleFileUpload(file)}>
+                <Button icon={<UploadOutlined />}>Upload JSON File</Button>
+              </Upload>
+            </Modal>
           </Space>
         </Col>
         <Col xs={24} sm={24} md={18} lg={20} xl={21}>

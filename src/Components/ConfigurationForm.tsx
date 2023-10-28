@@ -130,7 +130,7 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
                 href='https://platform.openai.com/'>
                 OpenAI key
               </Typography.Link>{" "}
-              is needed to access advanced AI functionalities.
+              for AI functionalities, only stored in your browser.
             </span>
           }>
           <Input.Password
