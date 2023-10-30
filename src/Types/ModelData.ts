@@ -6,6 +6,7 @@ export interface ModelData {
   secondOrderCodes?: { [key: string]: string[] }
   aggregateDimensions?: { [key: string]: string[] }
   modelDescription?: string
+  modelName?: string
   modelVisualization?: string
   remarks?: string
   papers?: AcademicPaper[]
@@ -13,5 +14,11 @@ export interface ModelData {
     concepts?: string[]
     interrelationship?: string
     evidence?: string
+  }[]
+  applicableTheories?: {
+    theory: string
+    description: string
+    relatedDimensions: string[]
+    possibleResearchQuestions: string[]
   }[]
 }

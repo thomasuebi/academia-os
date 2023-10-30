@@ -39,7 +39,7 @@ export const RemarkComponent = (props: {
           console.log(value)
         }}
         placeholder='Free-text remarks or tentative research question ...'>
-        <Input.TextArea />
+        <Input.TextArea rows={1} />
       </AutoComplete>
     </div>
   )

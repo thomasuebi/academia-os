@@ -117,7 +117,7 @@ export const CodingStep = (props: {
       loading: firstOrderLoading,
       content:
         !firstOrderLoading && initialCodes.length === 0 ? (
-          <Space direction='vertical'>
+          <Space direction='horizontal'>
             <RemarkComponent
               papers={props?.modelData?.papers || []}
               value={props.modelData?.remarks || ""}
@@ -169,7 +169,13 @@ export const CodingStep = (props: {
 
   return (
     <Space direction='vertical' style={{ width: "100%" }}>
-      <div style={{ width: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+        }}>
         <Steps
           current={current}
           onChange={setCurrent}
@@ -181,6 +187,12 @@ export const CodingStep = (props: {
             icon: item.loading ? <LoadingOutlined /> : null,
           }))}
         />
+        <Button
+          loading={firstOrderLoading || secondOrderLoading || aggregateLoading}
+          style={{ marginLeft: "20px" }}
+          onClick={load}>
+          {props.modelData.firstOrderCodes ? "Restart Coding" : "Start Coding"}
+        </Button>
       </div>
       <div
         style={{ width: "100%", marginTop: "20px" }}

@@ -364,7 +364,9 @@ export class OpenAIService {
       // Create a message prompt for brainstorming applicable theories
       const result = await model.predictMessages([
         new SystemMessage(
-          `Your task is to brainstorm theoretical models from existing literature that could be applicable to the research findings. Each theory should be well-defined and should relate to one or more aggregate dimensions. The output should be a JSON-formatted array following this schema: [{"theory": string, "description": string, "relatedDimensions": string[], "possibleResearchQuestions": string[]}]`
+          `Your task is to brainstorm theoretical models from existing literature that could be applicable to the research findings. Each theory should be well-defined and should relate to one or more aggregate dimensions. The output should be a JSON-formatted array following this schema: 
+          [{"theory": string, "description": string, "relatedDimensions": string[], "possibleResearchQuestions": string[]}]
+          `
         ),
         new HumanMessage(
           `Our research aims to understand specific phenomena within a given context. We have identified multiple aggregate dimensions and second-order codes that emerged from our data. Could you suggest theories that could help explain these dimensions and codes? The aggregate dimensions and codes are as follows: ${jsonString}`
@@ -545,10 +547,14 @@ export class OpenAIService {
       // Create a message prompt for brainstorming applicable theories
       const result = await model.predictMessages([
         new SystemMessage(
-          `You are a qualitative researcher tasked with constructing a theoretical model from existing literature that could be applicable to the research findings. The model should be well-defined and should relate to one or more aggregate dimensions. Emphasize the relationships between the dimensions and the model. Explain how the relationships might be causal or correlational, be clear on the narrative. You are non-conversational and should not respond to the user, but give a general description of model.`
+          `You are a qualitative researcher tasked with constructing a theoretical model from existing literature that could be applicable to the research findings. The model should be well-defined and should relate to one or more aggregate dimensions. It should be novel and original. You can build on existing theories, however, you should introduce new ideas. Emphasize the relationships between the dimensions and the model. Explain how the relationships might be causal or correlational, be clear on the narrative. You are non-conversational and should not respond to the user, but give a general description of model. Give a name to the model.`
         ),
         new HumanMessage(
-          `The aggregate dimensions and codes are as follows: ${jsonString}${
+          `Relevant existing theories: ${modelData.applicableTheories
+            ?.map((theory) => theory?.description || JSON.stringify(theory))
+            ?.join(", ")}
+          \n\n
+          The aggregate dimensions and codes are as follows: ${jsonString}${
             modelingRemarks ? ` Remarks: ${modelingRemarks}` : ""
           }\n\n${modelData.interrelationships
             ?.map(
@@ -557,7 +563,38 @@ export class OpenAIService {
                   interrelationship?.interrelationship
                 }`
             )
-            .join("\n")}\n\nNow, construct a theoretical model.`
+            .join(
+              "\n"
+            )}\n\nNow, construct an extensive, comprehensive, new, theoretical model.`
+        ),
+      ])
+
+      return result?.content
+    } catch (error) {
+      OpenAIService.handleError(error)
+      return ""
+    }
+  }
+
+  static async extractModelName(modelDescription: string) {
+    try {
+      const model = new ChatOpenAI(
+        {
+          maxTokens: 2000,
+          openAIApiKey: OpenAIService.getOpenAIKey(),
+        },
+        OpenAIService.openAIConfiguration()
+      )
+
+      // Create a message prompt for brainstorming applicable theories
+      const result = await model.predictMessages([
+        new SystemMessage(
+          `You extract theoretical model names. If none given, invent an original one. You only reply with the name, nothing else.`
+        ),
+        new HumanMessage(
+          `${modelDescription}
+          \n\n
+          Now, return the model name`
         ),
       ])
 

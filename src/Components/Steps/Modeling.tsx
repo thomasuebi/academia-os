@@ -23,21 +23,20 @@ export const ModelingStep = (props: {
   const [modelingRemarks, setModelingRemarks] = useState(
     props?.modelData?.remarks || ""
   )
-  const [applicableTheories, setApplicableTheories] = useState<any[]>([])
-
   const loadModel = async () => {
     setConstructLoading(true)
-    const model = await OpenAIService.modelConstruction(
+    const modelDescription = await OpenAIService.modelConstruction(
       props?.modelData,
       modelingRemarks
     )
-    props.onModelDataChange({ modelDescription: model })
-
+    props.onModelDataChange({ modelDescription })
+    const modelName = await OpenAIService.extractModelName(modelDescription)
+    props.onModelDataChange({ modelName })
     setConstructLoading(false)
     setVisualizationLoading(true)
     const visualization = await OpenAIService.modelVisualization(
       props?.modelData?.aggregateDimensions || {},
-      model || props?.modelData?.modelDescription || "",
+      modelDescription || props?.modelData?.modelDescription || "",
       modelingRemarks
     )
     setCurrent(2)
@@ -49,13 +48,15 @@ export const ModelingStep = (props: {
   }
 
   const load = async () => {
-    // setExploreLoading(true)
     if (props?.modelData?.aggregateDimensions) {
-      // const applicable = await OpenAIService.brainstormApplicableTheories(
-      //   props?.modelData?.aggregateDimensions || {}
-      // )
-      // setApplicableTheories(applicable)
-      // setExploreLoading(false)
+      setExploreLoading(true)
+      const applicableTheories =
+        await OpenAIService.brainstormApplicableTheories(
+          props?.modelData?.aggregateDimensions || {}
+        )
+      props.onModelDataChange({ applicableTheories })
+
+      setExploreLoading(false)
 
       setInterrelationshipsLoading(true)
       const tuples = await OpenAIService.conceptTuples(props.modelData)
@@ -94,7 +95,8 @@ export const ModelingStep = (props: {
       title: "Explore Applicable Theories",
       loading: exploreLoading,
       content:
-        !exploreLoading && applicableTheories.length === 0 ? (
+        !exploreLoading &&
+        (props.modelData.applicableTheories || [])?.length === 0 ? (
           <Space>
             <RemarkComponent
               papers={props.modelData.papers || []}
@@ -109,7 +111,7 @@ export const ModelingStep = (props: {
           </Space>
         ) : (
           <Table
-            dataSource={applicableTheories}
+            dataSource={props.modelData.applicableTheories || []}
             columns={[
               { title: "Theory", dataIndex: "theory" },
               { title: "Description", dataIndex: "description" },
@@ -178,6 +180,9 @@ export const ModelingStep = (props: {
               Build Model
             </Button>
           </Space>
+          <Typography.Title level={3}>
+            {props.modelData?.modelName}
+          </Typography.Title>
           <Mermaid chart={props?.modelData?.modelVisualization} />
         </Space>
       ),
@@ -188,18 +193,38 @@ export const ModelingStep = (props: {
 
   return (
     <Space direction='vertical' style={{ width: "100%" }}>
-      <div style={{ width: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+        }}>
         <Steps
           current={current}
           onChange={setCurrent}
           direction='horizontal'
           size='small'
+          style={{ flex: 1 }} // Take up as much space as possible
           items={steps.map((item) => ({
             key: item.title,
             title: item.title,
             icon: item.loading ? <LoadingOutlined /> : null,
           }))}
         />
+        <Button
+          loading={
+            exploreLoading ||
+            constructLoading ||
+            visualizationLoading ||
+            interrelationshipsLoading
+          }
+          style={{ marginLeft: "20px" }}
+          onClick={load}>
+          {props.modelData.applicableTheories
+            ? "Restart Modeling"
+            : "Start Modeling"}
+        </Button>
       </div>
       <div
         style={{ width: "100%", marginTop: "20px" }}
