@@ -6,13 +6,19 @@ import { asyncForEach } from "../Helpers/asyncForEach"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { uniqBy } from "../Helpers/uniqBy"
-import { ChatOpenAI } from "langchain/chat_models/openai"
+import { ChatOpenAI, ChatOpenAICallOptions } from "langchain/chat_models/openai"
 import { HumanMessage, SystemMessage } from "langchain/schema"
 import { OpenAI } from "langchain/llms/openai"
 import { AcademicPaper } from "../Types/AcademicPaper"
 import { type ClientOptions } from "openai"
 import { ModelData } from "../Types/ModelData"
 import { asyncMap } from "../Helpers/asyncMap"
+import {
+  AzureOpenAIInput,
+  OpenAIBaseInput,
+  OpenAIChatInput,
+} from "langchain/dist/types/openai-types"
+import { BaseLanguageModelParams } from "langchain/dist/base_language"
 
 export class OpenAIService {
   public static getOpenAIKey = () => {
@@ -26,11 +32,10 @@ export class OpenAIService {
   static async streamCompletion(prompt: string, callback: any) {
     try {
       const chat = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 800,
           streaming: true,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -51,10 +56,9 @@ export class OpenAIService {
   static async getDetailAboutPaper(paper: AcademicPaper, detail: string) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 20,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -111,7 +115,7 @@ export class OpenAIService {
           ),
         ])
 
-        return result?.content === detail ? "n/a" : result?.content
+        return (result?.content === detail ? "n/a" : result?.content) as string
       }
       return ""
     } catch (error) {
@@ -125,29 +129,32 @@ export class OpenAIService {
   ): Promise<string[]> {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 400,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
       if ((papers?.length || 0) > 0) {
-        const result = await model.predictMessages([
-          new SystemMessage(
-            "You are provided with a list of paper titles and you are tasked to find research questions that might be answered developing a new theoretical model. Return a JSON array of strings, each representing a potential research question. Return only a JSON array of strings, no additional text."
-          ),
-          new HumanMessage(
-            `${papers
-              .map((paper) => `- ${paper?.title}`)
-              .join(
-                "\n"
-              )}\n\nNow, provide an array of 5 potential research questions.`
-          ),
-        ])
+        const result = await model.predictMessages(
+          [
+            new SystemMessage(
+              `You are provided with a list of paper titles and you are tasked to find research questions that might be answered developing a new theoretical model. Return a JSON-object with an array of strings, each representing a potential research question in the following format: {"research_questions": string[]}. Return only a JSON array of strings, no additional text.`
+            ),
+            new HumanMessage(
+              `${papers
+                .map((paper) => `- ${paper?.title}`)
+                .join(
+                  "\n"
+                )}\n\nNow, provide an array of 5 potential research questions.`
+            ),
+          ],
+          { response_format: { type: "json_object" } }
+        )
         try {
           const codes = result?.content
-            ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+            ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
+                ?.research_questions
             : []
           return codes
         } catch (error) {
@@ -164,10 +171,9 @@ export class OpenAIService {
   static async initialCodingOfPaper(paper: AcademicPaper, remarks?: string) {
     try {
       const model = new ChatOpenAI(
-        {
-          maxTokens: 300, // Modify as needed
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        OpenAIService.openAIModelConfiguration({
+          maxTokens: 3000,
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -199,26 +205,30 @@ export class OpenAIService {
       // Loop through each chunk and apply initial coding
       await asyncForEach(chunks, async (chunk, index) => {
         console.log(`Processing chunk ${index + 1} of ${chunks.length}`)
-        const result = await model.predictMessages([
-          new SystemMessage(
-            'You are tasked with applying the initial coding phase of the Gioia method to the provided academic paper. In this phase, scrutinize the text to identify emergent themes, concepts, or patterns. Your output should be a JSON-formatted array of strings no longer than 7 words, each representing a distinct initial code in the language of the raw source. For example, your output should look like this: ["Emergent Theme 1", "Notable Concept", "Observed Pattern"]. Ensure to return ONLY a proper JSON array of strings.'
-          ),
-          new HumanMessage(
-            `${paper?.title}\n${
-              chunk.pageContent
-            }\n\nPerform initial coding according to the Gioia method on the given paper.${
-              remarks ? ` Remark: ${remarks}. ` : ""
-            } Return a JSON array.`
-          ),
-        ])
+        const result = await model.predictMessages(
+          [
+            new SystemMessage(
+              'You are tasked with applying the initial coding phase of the Gioia method to the provided academic paper. In this phase, scrutinize the text to identify emergent themes, concepts, or patterns. Your output should be a JSON object with an array of strings no longer than 7 words, each representing a distinct initial code in the language of the raw source. For example, your output should be in this format: {"codes": string[]}. Ensure to return ONLY a proper JSON array of strings.'
+            ),
+            new HumanMessage(
+              `${paper?.title}\n${
+                chunk.pageContent
+              }\n\nPerform initial coding according to the Gioia method on the given paper.${
+                remarks ? ` Remark: ${remarks}. ` : ""
+              } Return a JSON object.`
+            ),
+          ],
+          { response_format: { type: "json_object" } }
+        )
 
         try {
           const codes = result?.content
-            ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+            ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
+                ?.codes
             : []
           initialCodesArray.push(...codes)
         } catch (error) {
-          console.log(error)
+          console.log(error, result?.content)
         }
       })
 
@@ -241,14 +251,27 @@ export class OpenAIService {
       // timeout: 30000,
     } as ClientOptions
   }
+  static openAIModelConfiguration(
+    props?: Partial<OpenAIChatInput> &
+      Partial<AzureOpenAIInput> &
+      BaseLanguageModelParams
+  ) {
+    const modelName = localStorage.getItem("modelName") || "gpt-3.5-turbo"
+    return {
+      modelName,
+      openAIApiKey: OpenAIService.getOpenAIKey(),
+      ...(props || {}),
+    } as Partial<OpenAIChatInput> &
+      Partial<AzureOpenAIInput> &
+      BaseLanguageModelParams
+  }
 
   static async secondOrderCoding(codesArray: string[]) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -277,18 +300,21 @@ export class OpenAIService {
       // Loop through each chunk and apply initial coding
       await asyncForEach(chunks, async (chunk, index) => {
         // Create a message prompt for 2nd order coding
-        const result = await model.predictMessages([
-          new SystemMessage(
-            'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. As a general example, "employee sentiment" could be a 2nd order code to 1st level codes "Positive feelings toward new policy" and "Sense of control" Your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}. Ensure to return ONLY a proper JSON object.'
-          ),
-          new HumanMessage(
-            `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 12 focus codes.`
-          ),
-        ])
+        const result = await model.predictMessages(
+          [
+            new SystemMessage(
+              'You are tasked with applying the 2nd Order Coding phase of the Gioia method. In this phase, identify higher-level themes or categories that aggregate the initial codes. Your output should be a JSON-formatted object mapping each higher-level theme to an array of initial codes that belong to it. As a general example, "employee sentiment" could be a 2nd order code to 1st level codes "Positive feelings toward new policy" and "Sense of control" Your output should look like this, where the keys are the higher-level concepts: {"Some higher-Level theme": ["some initial code", "another initial code"], "Another higher-level theme": ["some initial code"]}.'
+            ),
+            new HumanMessage(
+              `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 12 focus codes.`
+            ),
+          ],
+          { response_format: { type: "json_object" } }
+        )
         // Parse the output and return
         try {
           const newSecondOrderCodes = result?.content
-            ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+            ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
             : {}
           Object.keys(newSecondOrderCodes).forEach((key) => {
             secondOrderCodes[key] = uniqBy(
@@ -310,10 +336,9 @@ export class OpenAIService {
   static async aggregateDimensions(secondOrderCodes: Record<string, string[]>) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -321,19 +346,22 @@ export class OpenAIService {
       const jsonString = JSON.stringify(Object.keys(secondOrderCodes))
 
       // Create a message prompt for the Aggregate Dimensions phase
-      const result = await model.predictMessages([
-        new SystemMessage(
-          'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions (5-7) that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. As a (probably unrelated) general example, "Policy Usability" could make for a good, quantifiable dimension. Your output should look like this, where the keys are the (quantifiable) dimensions: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure that the aggregate dimensions are grounded in the themes and to return ONLY a proper JSON object.'
-        ),
-        new HumanMessage(
-          `The 2nd order codes are as follows: ${jsonString}\n\nPerform aggregation into theoretical dimensions according to the Gioia method and return a JSON object.`
-        ),
-      ])
+      const result = await model.predictMessages(
+        [
+          new SystemMessage(
+            'You are tasked with applying the Aggregate Dimensions phase of the Gioia method. In this phase, identify overarching theoretical dimensions (5-7) that aggregate the 2nd order codes. Your output should be a JSON-formatted object mapping each aggregate dimension to an array of 2nd order codes that belong to it. As a (probably unrelated) general example, "Policy Usability" could make for a good, quantifiable dimension. Your output should look like this, where the keys are the (quantifiable) dimensions: {"some dim": ["theme", "another theme"], "another dim": ["theme123"]}. Ensure that the aggregate dimensions are grounded in the themes and to return ONLY a proper JSON object.'
+          ),
+          new HumanMessage(
+            `The 2nd order codes are as follows: ${jsonString}\n\nPerform aggregation into theoretical dimensions according to the Gioia method and return a JSON object.`
+          ),
+        ],
+        { response_format: { type: "json_object" } }
+      )
 
       // Parse the output and return
       try {
         const aggregateDimensions = result?.content
-          ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+          ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
           : {}
         return aggregateDimensions
       } catch (error) {
@@ -351,10 +379,9 @@ export class OpenAIService {
   ) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -362,21 +389,25 @@ export class OpenAIService {
       const jsonString = JSON.stringify(aggregateDimensions)
 
       // Create a message prompt for brainstorming applicable theories
-      const result = await model.predictMessages([
-        new SystemMessage(
-          `Your task is to brainstorm theoretical models from existing literature that could be applicable to the research findings. Each theory should be well-defined and should relate to one or more aggregate dimensions. The output should be a JSON-formatted array following this schema: 
-          [{"theory": string, "description": string, "relatedDimensions": string[], "possibleResearchQuestions": string[]}]
+      const result = await model.predictMessages(
+        [
+          new SystemMessage(
+            `Your task is to brainstorm theoretical models from existing literature that could be applicable to the research findings. Each theory should be well-defined and should relate to one or more aggregate dimensions. The output should be a JSON-object with an array following this schema: 
+          {"theories": {"theory": string, "description": string, "relatedDimensions": string[], "possibleResearchQuestions": string[]}[]}
           `
-        ),
-        new HumanMessage(
-          `Our research aims to understand specific phenomena within a given context. We have identified multiple aggregate dimensions and second-order codes that emerged from our data. Could you suggest theories that could help explain these dimensions and codes? The aggregate dimensions and codes are as follows: ${jsonString}`
-        ),
-      ])
+          ),
+          new HumanMessage(
+            `Our research aims to understand specific phenomena within a given context. We have identified multiple aggregate dimensions and second-order codes that emerged from our data. Could you suggest theories that could help explain these dimensions and codes? The aggregate dimensions and codes are as follows: ${jsonString}`
+          ),
+        ],
+        { response_format: { type: "json_object" } }
+      )
 
       // Parse the output and return
       try {
         const applicableTheories = result?.content
-          ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+          ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
+              ?.theories
           : []
         return applicableTheories
       } catch (error) {
@@ -394,10 +425,9 @@ export class OpenAIService {
   ): Promise<[string, string][]> {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -405,25 +435,29 @@ export class OpenAIService {
       const jsonString = JSON.stringify(modelData?.aggregateDimensions)
 
       // Create a message prompt for brainstorming applicable theories
-      const result = await model.predictMessages([
-        new SystemMessage(
-          `Your task is to hypothesize which concepts could be related to each other. Return a JSON-formatted array of tuple arrays, where each tuple array represents a possible relationship between two concepts. The output should be a JSON-formatted array following this schema: [[string, string], [string, string], ...]. E.g. [["Knowledge Management", "Organizational Performance"]] This allows us to in the next step research the relationship between the concepts in the literature.`
-        ),
-        new HumanMessage(
-          `Our research aims to understand ${
-            modelData.query || "specific phenomena within a given context"
-          }.${
-            modelData.remarks ? `Remarks: ${modelData.remarks}.` : ""
-          } We have identified multiple aggregate dimensions and second-order codes that emerged from our data.
+      const result = await model.predictMessages(
+        [
+          new SystemMessage(
+            `Your task is to hypothesize which concepts could be related to each other. Return a JSON-object with an array of tuple arrays, where each tuple array represents a possible relationship between two concepts. The output should be a JSON-formatted array following this schema: {"tuples": [[string, string], [string, string], ...]}. E.g. {"tuples": [["Knowledge Management", "Organizational Performance"]]}. This allows us to in the next step research the relationship between the concepts in the literature.`
+          ),
+          new HumanMessage(
+            `Our research aims to understand ${
+              modelData.query || "specific phenomena within a given context"
+            }.${
+              modelData.remarks ? `Remarks: ${modelData.remarks}.` : ""
+            } We have identified multiple aggregate dimensions and second-order codes that emerged from our data.
           ${jsonString}
           Now, hypothesize which concepts could be related to each other and return only the JSON-formatted array of 10 - 20 tuples.`
-        ),
-      ])
+          ),
+        ],
+        { response_format: { type: "json_object" } }
+      )
 
       // Parse the output and return
       try {
         const conceptTuples = result?.content
-          ? JSON.parse(result?.content?.replace(/\\n/g, " "))
+          ? JSON.parse((result?.content as string)?.replace(/\\n/g, " "))
+              ?.tuples
           : []
         return conceptTuples
       } catch (error) {
@@ -496,10 +530,9 @@ export class OpenAIService {
 
           // Now, summarize the interrelationship between the two concepts using GPT-3.5
           const model = new ChatOpenAI(
-            {
+            OpenAIService.openAIModelConfiguration({
               maxTokens: 200,
-              openAIApiKey: OpenAIService.getOpenAIKey(),
-            },
+            }),
             OpenAIService.openAIConfiguration()
           )
 
@@ -534,10 +567,9 @@ export class OpenAIService {
   ) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -550,7 +582,11 @@ export class OpenAIService {
           `You are a qualitative researcher tasked with constructing a theoretical model from existing literature that could be applicable to the research findings. The model should be well-defined and should relate to one or more aggregate dimensions. It should be novel and original. You can build on existing theories, however, you should introduce new ideas. Emphasize the relationships between the dimensions and the model. Explain how the relationships might be causal or correlational, be clear on the narrative. You are non-conversational and should not respond to the user, but give a general description of model. Give a name to the model.`
         ),
         new HumanMessage(
-          `Relevant existing theories: ${modelData.applicableTheories
+          `${
+            modelData?.critique && modelData?.modelDescription
+              ? `Previous model: ${modelData?.modelDescription}\nCritique: ${modelData?.critique}\n\n`
+              : ""
+          }Relevant existing theories: ${modelData.applicableTheories
             ?.map((theory) => theory?.description || JSON.stringify(theory))
             ?.join(", ")}
           \n\n
@@ -569,7 +605,7 @@ export class OpenAIService {
         ),
       ])
 
-      return result?.content
+      return result?.content as string
     } catch (error) {
       OpenAIService.handleError(error)
       return ""
@@ -579,10 +615,9 @@ export class OpenAIService {
   static async extractModelName(modelDescription: string) {
     try {
       const model = new ChatOpenAI(
-        {
+        OpenAIService.openAIModelConfiguration({
           maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        }),
         OpenAIService.openAIConfiguration()
       )
 
@@ -598,29 +633,56 @@ export class OpenAIService {
         ),
       ])
 
-      return result?.content
+      return result?.content as string
     } catch (error) {
       OpenAIService.handleError(error)
       return ""
     }
   }
 
-  static async modelVisualization(
-    aggregateDimensions: Record<string, string[]>,
-    modelDescription: string,
-    modelingRemarks: string
-  ) {
+  static async critiqueModel(modelData: ModelData) {
     try {
       const model = new ChatOpenAI(
-        {
-          maxTokens: 2000,
-          openAIApiKey: OpenAIService.getOpenAIKey(),
-        },
+        OpenAIService.openAIModelConfiguration({
+          maxTokens: 1000,
+        }),
         OpenAIService.openAIConfiguration()
       )
 
-      // Convert the JSON object of aggregate dimensions into a JSON string
-      const jsonString = JSON.stringify(aggregateDimensions)
+      // Create a message prompt for brainstorming applicable theories
+      const result = await model.predictMessages([
+        new SystemMessage(
+          `You are a qualitative researcher tasked with critiquing a theoretical model. Offer your comments on novelty, conciseness, clarity and theoretical insight and brainstorm potential new patterns to discover in the data. You are non-conversational and should not respond to the user, only return the critique, nothing else.`
+        ),
+        new HumanMessage(
+          `${
+            (modelData?.firstOrderCodes?.length || 0) < 50
+              ? `First order codes: ${modelData?.firstOrderCodes?.join(", ")}`
+              : ""
+          }
+          ${modelData?.interrelationships}
+          \n\n
+          ${modelData?.modelName}\n
+          ${modelData?.modelDescription}
+          Now, return your critique`
+        ),
+      ])
+
+      return result?.content as string
+    } catch (error) {
+      OpenAIService.handleError(error)
+      return ""
+    }
+  }
+
+  static async modelVisualization(modelData: ModelData) {
+    try {
+      const model = new ChatOpenAI(
+        OpenAIService.openAIModelConfiguration({
+          maxTokens: 2000,
+        }),
+        OpenAIService.openAIConfiguration()
+      )
 
       // Create a message prompt for brainstorming applicable theories
       const result = await model.predictMessages([
@@ -629,7 +691,7 @@ export class OpenAIService {
         
         flowchart TD
           %% Nodes
-          A[Organizational Culture]
+          A[Organizational Culture<br>'evidence 1'<br>'evidence2']
           B[Leadership Style]
           C[Employee Satisfaction]
           D[Employee Productivity]
@@ -638,7 +700,7 @@ export class OpenAIService {
 
           %% Relationships
           A --> B
-          B ==>|Directly Influences| C
+          B ==>|Directly Influences<br>'evidence 3'| C
           A -.->|Moderates| C
           C --> D
           D -->|Impacts| E
@@ -648,16 +710,41 @@ export class OpenAIService {
 
 
         As we have seen in above diagram, ==> is used to indicate a strong direct influence, --> is used to indicate a weaker influence, -.-> is used to indicate a moderating relationship, and --- is used to indicate a correlation.
+        Evidence can be cited by adding a line break and then the evidence in single quotes. Use first-order codes or second-order codes as evidence only, preferably not as their own nodes.
         Now, given a model description, you should generate a MermaidJS diagram like the one above, showing the interrelationship between different concepts. Keep it simple and effective. You are non-conversational and should not respond to the user, only return the MermaidJS code, nothing else.`
         ),
         new HumanMessage(
-          `${modelDescription}${
-            modelingRemarks ? `\n\nRemarks: ${modelingRemarks}` : ""
+          `${
+            (modelData?.firstOrderCodes?.length || 0) > 200
+              ? `Second-order codes: ${Object.keys(
+                  modelData?.secondOrderCodes || {}
+                )?.join(", ")}`
+              : `First-order codes: ${modelData?.firstOrderCodes?.join(", ")}`
+          }\n\n${modelData.modelDescription}${
+            modelData.remarks ? `\n\nRemarks: ${modelData.remarks}` : ""
           }`
         ),
       ])
 
-      return result?.content
+      if (result?.content) {
+        // Normalize the result content
+        let normalizedContent = result.content as string
+
+        // Find the index of the first occurrence of "flowchart "
+        const startIndex = normalizedContent.indexOf("flowchart ")
+
+        // If "flowchart " is found, trim the string from this point
+        if (startIndex !== -1) {
+          normalizedContent = normalizedContent.substring(startIndex)
+        }
+
+        // Remove any trailing backticks and trim any leading/trailing new lines
+        normalizedContent = normalizedContent.replace(/```/g, "").trim()
+
+        return normalizedContent
+      } else {
+        return ""
+      }
     } catch (error) {
       OpenAIService.handleError(error)
       return ""

@@ -8,6 +8,7 @@ import {
   Space,
   Row,
   Col,
+  Select,
 } from "antd"
 import axios from "axios"
 
@@ -36,6 +37,8 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
     try {
       const values = (await form.validateFields()) as any
       console.log("Form values:", values)
+
+      localStorage.setItem("modelName", values.modelName ?? "gpt-3.5-turbo")
 
       localStorage.setItem("email", values.email ?? defaultValues.email ?? "")
       localStorage.setItem(
@@ -140,6 +143,27 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
         </Form.Item>
         {showMoreOptions && (
           <>
+            <Row>
+              <Col span={24}>
+                <Form.Item
+                  name='modelName'
+                  extra='Select the OpenAI model you want to use'>
+                  <Select
+                    placeholder='Choose OpenAI Model'
+                    defaultValue={
+                      localStorage.getItem("modelName") || "gpt-3.5-turbo"
+                    }>
+                    <Select.Option value='gpt-4-1106-preview'>
+                      GPT-4-1106-Preview (GPT-4 turbo with 128k context window)
+                    </Select.Option>
+                    <Select.Option value='gpt-4'>GPT-4</Select.Option>
+                    <Select.Option value='gpt-3.5-turbo'>
+                      GPT-3.5-Turbo
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
             <Row gutter={12}>
               <Col span={12}>
                 <Form.Item

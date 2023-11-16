@@ -21,4 +21,5 @@ export interface ModelData {
     relatedDimensions: string[]
     possibleResearchQuestions: string[]
   }[]
+  critique?: string
 }

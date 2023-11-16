@@ -1,4 +1,13 @@
-import { Button, Input, Space, Steps, Table, Typography, message } from "antd"
+import {
+  Alert,
+  Button,
+  Input,
+  Space,
+  Steps,
+  Table,
+  Typography,
+  message,
+} from "antd"
 import { AcademicPaper } from "../../Types/AcademicPaper"
 import { PaperTable } from "../PaperTable"
 import { useEffect, useState } from "react"
@@ -20,6 +29,8 @@ export const ModelingStep = (props: {
     useState(false)
   const [constructLoading, setConstructLoading] = useState(false)
   const [visualizationLoading, setVisualizationLoading] = useState(false)
+  const [iteratingLoading, setIteratingLoading] = useState(false)
+
   const [modelingRemarks, setModelingRemarks] = useState(
     props?.modelData?.remarks || ""
   )
@@ -35,9 +46,7 @@ export const ModelingStep = (props: {
     setConstructLoading(false)
     setVisualizationLoading(true)
     const visualization = await OpenAIService.modelVisualization(
-      props?.modelData?.aggregateDimensions || {},
-      modelDescription || props?.modelData?.modelDescription || "",
-      modelingRemarks
+      props?.modelData
     )
     setCurrent(2)
     props.onModelDataChange({
@@ -45,6 +54,10 @@ export const ModelingStep = (props: {
     })
     setCurrent(3)
     setVisualizationLoading(false)
+    setIteratingLoading(true)
+    const critique = await OpenAIService.critiqueModel(props?.modelData)
+    props.onModelDataChange({ critique })
+    setIteratingLoading(false)
   }
 
   const load = async () => {
@@ -92,7 +105,7 @@ export const ModelingStep = (props: {
   const steps = [
     {
       key: "explore",
-      title: "Explore Applicable Theories",
+      title: "Applicable Theories",
       loading: exploreLoading,
       content:
         !exploreLoading &&
@@ -157,8 +170,14 @@ export const ModelingStep = (props: {
               Build Model
             </Button>
           </Space>
-          <Typography.Paragraph>
-            {props?.modelData?.modelDescription}
+          <Typography.Paragraph
+            editable={{
+              onChange: (e) =>
+                props.onModelDataChange &&
+                props.onModelDataChange({ modelDescription: e }),
+              text: props?.modelData?.modelDescription,
+            }}>
+            {props?.modelData?.modelDescription || "No model developed yet."}
           </Typography.Paragraph>
         </Space>
       ),
@@ -184,6 +203,33 @@ export const ModelingStep = (props: {
             {props.modelData?.modelName}
           </Typography.Title>
           <Mermaid chart={props?.modelData?.modelVisualization} />
+          <Alert
+            type='info'
+            message='If you see the message "Syntax error in text" it means that there
+            was an error in creating the visualization. You can hit "Start Modeling" to try again.'
+          />
+        </Space>
+      ),
+    },
+    {
+      key: "iterating",
+      title: "Iterating",
+      loading: iteratingLoading,
+      content: (
+        <Space direction='vertical' style={{ width: "100%" }}>
+          <Typography.Title level={5}>Critique</Typography.Title>
+          <Typography.Paragraph
+            editable={{
+              onChange: (e) =>
+                props.onModelDataChange &&
+                props.onModelDataChange({ critique: e }),
+              text: props?.modelData?.critique,
+            }}>
+            {props?.modelData?.critique || "No critique developed yet."}
+          </Typography.Paragraph>
+          <Button onClick={() => loadModel()}>
+            Use Critique for Another Modeling Iteration
+          </Button>
         </Space>
       ),
     },
