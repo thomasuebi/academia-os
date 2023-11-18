@@ -188,17 +188,6 @@ export const ModelingStep = (props: {
       loading: visualizationLoading,
       content: (
         <Space direction='vertical' style={{ width: "100%" }}>
-          <Space direction='horizontal'>
-            <Input
-              style={{ width: "300px" }}
-              value={modelingRemarks}
-              onChange={(e) => setModelingRemarks(e.target.value)}
-              placeholder='Free-text remarks for the modeling ...'
-            />
-            <Button loading={constructLoading} onClick={loadModel}>
-              Build Model
-            </Button>
-          </Space>
           <Typography.Title level={3}>
             {props.modelData?.modelName}
           </Typography.Title>

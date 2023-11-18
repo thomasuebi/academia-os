@@ -48,7 +48,7 @@ const { useToken } = theme
 const Workflow = (props: { tabKey?: string }) => {
   const [mode, setMode] = useState<
     "qualitative" | undefined | "literatureReview"
-  >()
+  >("qualitative")
   const [current, setCurrent] = useState(0)
   const [results, setResults] = useState<AcademicPaper[] | null>(null)
 
@@ -183,30 +183,30 @@ const Workflow = (props: { tabKey?: string }) => {
         </>
       ),
     },
-    {
-      key: "work",
-      title: "Work  ",
-      content: (
-        <>
-          <CheckCard.Group
-            onChange={(value) => {
-              setMode(value as any)
-            }}
-            value={mode}>
-            <CheckCard
-              title='Qualitative Analysis'
-              description='Analyze large amounts of qualitative data with the Gioia method.'
-              value='qualitative'
-            />
-            <CheckCard
-              title='Literature Review'
-              description='Let AI write the complete Literature Review for you.'
-              value='literatureReview'
-            />
-          </CheckCard.Group>
-        </>
-      ),
-    },
+    // {
+    //   key: "work",
+    //   title: "Work  ",
+    //   content: (
+    //     <>
+    //       <CheckCard.Group
+    //         onChange={(value) => {
+    //           setMode(value as any)
+    //         }}
+    //         value={mode}>
+    //         <CheckCard
+    //           title='Qualitative Analysis'
+    //           description='Analyze large amounts of qualitative data with the Gioia method.'
+    //           value='qualitative'
+    //         />
+    //         <CheckCard
+    //           title='Literature Review'
+    //           description='Let AI write the complete Literature Review for you.'
+    //           value='literatureReview'
+    //         />
+    //       </CheckCard.Group>
+    //     </>
+    //   ),
+    // },
     ...(mode === "literatureReview"
       ? [
           {

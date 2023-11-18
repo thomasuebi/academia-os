@@ -256,7 +256,7 @@ export class OpenAIService {
       Partial<AzureOpenAIInput> &
       BaseLanguageModelParams
   ) {
-    const modelName = localStorage.getItem("modelName") || "gpt-3.5-turbo"
+    const modelName = localStorage.getItem("modelName") || "gpt-4-1106-preview"
     return {
       modelName,
       openAIApiKey: OpenAIService.getOpenAIKey(),

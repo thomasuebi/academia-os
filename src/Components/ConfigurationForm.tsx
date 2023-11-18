@@ -151,7 +151,7 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
                   <Select
                     placeholder='Choose OpenAI Model'
                     defaultValue={
-                      localStorage.getItem("modelName") || "gpt-3.5-turbo"
+                      localStorage.getItem("modelName") || "gpt-4-1106-preview"
                     }>
                     <Select.Option value='gpt-4-1106-preview'>
                       GPT-4-1106-Preview (GPT-4 turbo with 128k context window)
