@@ -149,7 +149,11 @@ export class OpenAIService {
                 )}\n\nNow, provide an array of 5 potential research questions.`
             ),
           ],
-          { response_format: { type: "json_object" } }
+          {
+            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+              ? { response_format: { type: "json_object" } }
+              : {}),
+          }
         )
         try {
           const codes = result?.content
@@ -218,7 +222,11 @@ export class OpenAIService {
               } Return a JSON object.`
             ),
           ],
-          { response_format: { type: "json_object" } }
+          {
+            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+              ? { response_format: { type: "json_object" } }
+              : {}),
+          }
         )
 
         try {
@@ -309,7 +317,11 @@ export class OpenAIService {
               `Part of the initial codes are as follows: ${chunk.pageContent}\n\nPerform 2nd Order Coding according to the Gioia method and return a JSON object of 12 focus codes.`
             ),
           ],
-          { response_format: { type: "json_object" } }
+          {
+            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+              ? { response_format: { type: "json_object" } }
+              : {}),
+          }
         )
         // Parse the output and return
         try {
@@ -355,7 +367,15 @@ export class OpenAIService {
             `The 2nd order codes are as follows: ${jsonString}\n\nPerform aggregation into theoretical dimensions according to the Gioia method and return a JSON object.`
           ),
         ],
-        { response_format: { type: "json_object" } }
+        {
+          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ? {
+                ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+                  ? { response_format: { type: "json_object" } }
+                  : {}),
+              }
+            : {}),
+        }
       )
 
       // Parse the output and return
@@ -400,7 +420,11 @@ export class OpenAIService {
             `Our research aims to understand specific phenomena within a given context. We have identified multiple aggregate dimensions and second-order codes that emerged from our data. Could you suggest theories that could help explain these dimensions and codes? The aggregate dimensions and codes are as follows: ${jsonString}`
           ),
         ],
-        { response_format: { type: "json_object" } }
+        {
+          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ? { response_format: { type: "json_object" } }
+            : {}),
+        }
       )
 
       // Parse the output and return
@@ -450,7 +474,11 @@ export class OpenAIService {
           Now, hypothesize which concepts could be related to each other and return only the JSON-formatted array of 10 - 20 tuples.`
           ),
         ],
-        { response_format: { type: "json_object" } }
+        {
+          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ? { response_format: { type: "json_object" } }
+            : {}),
+        }
       )
 
       // Parse the output and return
