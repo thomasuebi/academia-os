@@ -150,7 +150,8 @@ export class OpenAIService {
             ),
           ],
           {
-            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+            "gpt-4-1106-preview"
               ? { response_format: { type: "json_object" } }
               : {}),
           }
@@ -223,7 +224,8 @@ export class OpenAIService {
             ),
           ],
           {
-            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+            "gpt-4-1106-preview"
               ? { response_format: { type: "json_object" } }
               : {}),
           }
@@ -264,7 +266,9 @@ export class OpenAIService {
       Partial<AzureOpenAIInput> &
       BaseLanguageModelParams
   ) {
-    const modelName = localStorage.getItem("modelName") || "gpt-4-1106-preview"
+    const modelName =
+      (localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+      "gpt-4-1106-preview"
     return {
       modelName,
       openAIApiKey: OpenAIService.getOpenAIKey(),
@@ -318,7 +322,8 @@ export class OpenAIService {
             ),
           ],
           {
-            ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+            ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+            "gpt-4-1106-preview"
               ? { response_format: { type: "json_object" } }
               : {}),
           }
@@ -368,12 +373,9 @@ export class OpenAIService {
           ),
         ],
         {
-          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
-            ? {
-                ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
-                  ? { response_format: { type: "json_object" } }
-                  : {}),
-              }
+          ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+          "gpt-4-1106-preview"
+            ? { response_format: { type: "json_object" } }
             : {}),
         }
       )
@@ -421,7 +423,8 @@ export class OpenAIService {
           ),
         ],
         {
-          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+          ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+          "gpt-4-1106-preview"
             ? { response_format: { type: "json_object" } }
             : {}),
         }
@@ -475,7 +478,8 @@ export class OpenAIService {
           ),
         ],
         {
-          ...(localStorage.getItem("modelName") || "gpt-4-1106-preview"
+          ...((localStorage.getItem("modelName") || "gpt-4-1106-preview") ===
+          "gpt-4-1106-preview"
             ? { response_format: { type: "json_object" } }
             : {}),
         }
