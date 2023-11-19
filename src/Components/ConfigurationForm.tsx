@@ -38,7 +38,10 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
       const values = (await form.validateFields()) as any
       console.log("Form values:", values)
 
-      localStorage.setItem("modelName", values.modelName ?? "gpt-3.5-turbo")
+      localStorage.setItem(
+        "modelName",
+        values.modelName ?? "gpt-4-1106-preview"
+      )
 
       localStorage.setItem("email", values.email ?? defaultValues.email ?? "")
       localStorage.setItem(
