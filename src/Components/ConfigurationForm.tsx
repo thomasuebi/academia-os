@@ -113,7 +113,7 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
   return (
     <>
       <Form form={form} layout='vertical'>
-        <Form.Item
+        {/* <Form.Item
           //   label='Email Address'
           name='email'
           extra='We will keep you updated about new features and updates.'>
@@ -121,7 +121,7 @@ const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ onSubmit }) => {
             placeholder='john.doe@example.com'
             defaultValue={defaultValues.email || ""}
           />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item
           //   label='OpenAI Key'
           name='openAIKey'
