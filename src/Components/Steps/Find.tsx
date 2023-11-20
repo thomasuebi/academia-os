@@ -9,6 +9,7 @@ import {
   Tag,
   Tour,
   Typography,
+  message,
 } from "antd"
 import { CheckCard } from "@ant-design/pro-components"
 import React, { useEffect, useRef, useState } from "react"
@@ -77,7 +78,12 @@ const StepFind = (props: {
     )
     setResults(searchResults)
     props?.onLoadingChange?.(false)
-    props?.onFinish?.({ searchQuery: query, searchResults })
+    if (searchResults.length > 0) {
+      props?.onFinish?.({ searchQuery: query, searchResults })
+    } else {
+      message.info("No results found. Try a different search query.")
+      setSearchLoading(false)
+    }
   }
 
   return (

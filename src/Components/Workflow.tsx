@@ -18,6 +18,7 @@ import {
   Tag,
   Modal,
   Upload,
+  Alert,
 } from "antd"
 import {
   BookOutlined,
@@ -144,12 +145,19 @@ const Workflow = (props: { tabKey?: string }) => {
       key: "explore",
       loading: searchLoading,
       title: `Explore${results?.length ? ` (${results?.length})` : ""}`,
-      content: (
-        <PaperTable
-          onPapersChange={(papers) => setResults(papers)}
-          papers={results || []}
-        />
-      ),
+      content:
+        (results || [])?.length > 0 ? (
+          <PaperTable
+            onPapersChange={(papers) => setResults(papers)}
+            papers={results || []}
+          />
+        ) : (
+          <Alert
+            message={
+              "No results found. Try another search query. Try to be less specific or to write in keywords."
+            }
+          />
+        ),
     },
     {
       key: "evaluate",
@@ -160,12 +168,20 @@ const Workflow = (props: { tabKey?: string }) => {
       content: (
         <>
           {OpenAIService.getOpenAIKey() ? (
-            <PaperTable
-              onPapersChange={(papers) => {
-                setModelData((prevValue) => ({ ...prevValue, papers }))
-              }}
-              papers={modelData.papers || []}
-            />
+            (modelData.papers || [])?.length > 0 ? (
+              <PaperTable
+                onPapersChange={(papers) => {
+                  setModelData((prevValue) => ({ ...prevValue, papers }))
+                }}
+                papers={modelData.papers || []}
+              />
+            ) : (
+              <Alert
+                message={
+                  "No results found. Try another search query. Try to be less specific or to write in keywords."
+                }
+              />
+            )
           ) : (
             <Result
               status='404'
