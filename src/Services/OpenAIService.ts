@@ -660,9 +660,9 @@ export class OpenAIService {
               ? `First order codes: ${modelData?.firstOrderCodes?.join(", ")}`
               : ""
           }
-          ${modelData?.interrelationships}
+          ${JSON.stringify(modelData?.interrelationships)}
           \n\n
-          ${modelData?.modelName}\n
+          Model: ${modelData?.modelName}\n
           ${modelData?.modelDescription}
           Now, return your critique`
         ),
