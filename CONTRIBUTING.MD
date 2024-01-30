@@ -49,7 +49,9 @@ Feel free to use the issue tracker for:
 
 - Reporting bugs
 - Discussing current issues
-- Proposing new features and changes
+- Proposing new features
+- Requesting enhancements to existing features
+- Sharing workarounds or solutions for common problems
 
 Before submitting a new issue, please make sure to check if a similar issue already exists or has been closed previously.
 
@@ -63,7 +65,7 @@ AcademiaOS is distributed under the terms of the MIT License. For more details, 
 
 ## Ownership
 
-While the project is open-source and contributions are welcome, it should be noted that all commercial services offered under the domain `academia-os.org` are the exclusive right of Thomas Übellacker. Feel free to host your own commercial services based on this repository.
+While the project is open-source and contributions are welcome, it should be noted that all commercial services offered under the domain `academia-os.org` are the exclusive right of Stefan Huber & Thomas Übellacker. Feel free to host your own commercial services based on this repository.
 
 ---
 
