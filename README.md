@@ -5,10 +5,12 @@
 
 Welcome to **AcademiaOS**, your one-stop solution for academic information retrieval and reasoning! We've built this on a robust large language model platform equipped with a bouquet of features dedicated to providing the best assistance for researchers possible.
 
+For a deeper understanding of the underlying technology and concepts, you can refer to our paper: [AcademiaOS: Automating Grounded Theory Development in Qualitative Research with Large Language Models](https://arxiv.org/abs/2403.08844).
+
 <p align="center">
     <img src="public\overview.gif"  alt="Demo" width="400"/>
 </p>
-Live-Demo: https://academia-os.org/
+Live-Demo: [academia-os.org](https://academia-os.org/)!
 
 Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-23730lsp0-Qlkv_0Bs3hgMY2FGTC~HnQ)!
 ## 🌟 Features 

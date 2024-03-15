@@ -88,11 +88,22 @@ const StepFind = (props: {
 
   return (
     <>
-      <div style={{ width: "100%", textAlign: "center", padding: "20px" }}>
+      <div
+        style={{
+          width: "100%",
+          textAlign: "center",
+          paddingLeft: "20px",
+          paddingRight: "20px",
+        }}>
         <img
           alt='AcademiaOS'
           src={logo}
-          style={{ width: "50px", height: "50px", marginBottom: "-20px" }}
+          style={{
+            width: "30px",
+            height: "30px",
+            marginBottom: "-30px",
+            marginTop: "-30px",
+          }}
         />
         <Typography.Title>AcademiaOS</Typography.Title>
         <p style={{ marginTop: "-10px" }}>
@@ -210,6 +221,22 @@ const StepFind = (props: {
           />
         </Col>
       </Row>
+      <p>
+        <a
+          href='https://arxiv.org/abs/2403.08844'
+          target='_blank'
+          rel='noopener noreferrer'>
+          Read our paper
+        </a>
+      </p>
+      <p>
+        To cite AcademiaOS, please use the following format: <br />
+        <code>
+          Übellacker Thomas. (2023). AcademiaOS: Automating Grounded Theory
+          Development in Qualitative Research with Large Language Models.
+          https://arxiv.org/abs/2403.08844
+        </code>
+      </p>
       {/* Tour Guide */}
       <Tour
         open={uploadTourOpen}

@@ -6,18 +6,19 @@ import { asyncForEach } from "../Helpers/asyncForEach"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import { OpenAIEmbeddings } from "langchain/embeddings/openai"
 import { uniqBy } from "../Helpers/uniqBy"
-import { ChatOpenAI, ChatOpenAICallOptions } from "langchain/chat_models/openai"
+import {
+  AzureOpenAIInput,
+  ChatOpenAI,
+  ChatOpenAICallOptions,
+  OpenAIChatInput,
+} from "langchain/chat_models/openai"
 import { HumanMessage, SystemMessage } from "langchain/schema"
 import { OpenAI } from "langchain/llms/openai"
 import { AcademicPaper } from "../Types/AcademicPaper"
 import { type ClientOptions } from "openai"
 import { ModelData } from "../Types/ModelData"
 import { asyncMap } from "../Helpers/asyncMap"
-import {
-  AzureOpenAIInput,
-  OpenAIBaseInput,
-  OpenAIChatInput,
-} from "langchain/dist/types/openai-types"
+
 import { BaseLanguageModelParams } from "langchain/dist/base_language"
 
 export class OpenAIService {
