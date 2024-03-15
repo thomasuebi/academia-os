@@ -11,7 +11,7 @@ For a deeper understanding of the underlying technology and concepts, you can re
     <img src="public\overview.gif"  alt="Demo" width="400"/>
 </p>
 
-Live-Demo: [academia-os.org](https://academia-os.org/)!
+Live-Demo: [academia-os.org](https://academia-os.org/)
 
 Join the [Slack Community](https://join.slack.com/t/academiaos/shared_invite/zt-23730lsp0-Qlkv_0Bs3hgMY2FGTC~HnQ)!
 ## 🌟 Features 
